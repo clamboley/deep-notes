@@ -1,17 +1,35 @@
-# Quartz v5
+# deep-notes
 
-> “[One] who works with the door open gets all kinds of interruptions, but [they] also occasionally gets clues as to what the world is and what might be important.” — Richard Hamming
+My personal notes and research, published as a digital garden.
 
-Quartz is a set of tools that helps you publish your [digital garden](https://jzhao.xyz/posts/networked-thought) and notes as a website for free.
+🔗 https://clamboley.github.io/deep-notes
 
-🔗 Read the documentation and get started: https://quartz.jzhao.xyz/
+## Stack
 
-[Join the Discord Community](https://discord.gg/cRFFHYye7t)
+- [Quartz v5](https://quartz.jzhao.xyz/) — static site generator for digital gardens
+- GitHub Pages — hosting, deployed automatically on push
 
-## Sponsors
+## Adding a note
 
-<p align="center">
-  <a href="https://github.com/sponsors/jackyzha0">
-    <img src="https://cdn.jsdelivr.net/gh/jackyzha0/jackyzha0/sponsorkit/sponsors.svg" />
-  </a>
-</p>
+Create a Markdown file in `content/` with frontmatter:
+
+```markdown
+---
+title: Note title
+tags: [tag1, tag2]
+date: YYYY-MM-DD
+draft: false
+---
+
+Your content here.
+```
+
+Set `draft: true` to keep a note local without publishing it.
+
+## Deploying
+
+```bash
+npx quartz sync
+```
+
+This commits, pushes to the `v5` branch, and triggers the GitHub Actions deploy.

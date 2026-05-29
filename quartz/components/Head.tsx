@@ -91,7 +91,8 @@ export default (() => {
           </>
         )}
 
-        <link rel="icon" href={iconPath} />
+        <link rel="icon" href={joinSegments(baseDir, "static/icon.svg")} type="image/svg+xml" />
+        <link rel="icon" href={iconPath} type="image/png" />
         <link rel="apple-touch-icon" href={joinSegments(baseDir, "static/apple-touch-icon.png")} />
         <link rel="manifest" href={joinSegments(baseDir, "static/manifest.json")} />
         <meta name="theme-color" content="#484D6D" />

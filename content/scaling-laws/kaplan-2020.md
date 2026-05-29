@@ -57,19 +57,23 @@ Total training FLOPs for a transformer with $N$ non-embedding parameters trained
 
 ### Architecture insensitivity
 
+![[kaplan-fig5.png]]
+*Figure 5: Performance depends very mildly on model shape when the total number of non-embedding parameters N is held fixed. The loss varies only a few percent over a wide range of shapes. Small differences in parameter counts are compensated for by using the fit to L(N) as a baseline. Aspect ratio in particular can vary by a factor of 40 while only slightly impacting performance; an (nlayer, dmodel) = (6, 4288) reaches a loss within 3% of the (48, 1600) model used in [RWC+19].*
+
 At fixed total $N$, changing depth/width ratio, number of heads, or FFN multiplier has much less effect on loss than changing $N$ itself. What matters is total parameter count, not how it is distributed. The optimal depth scales roughly as $d_\text{model} \propto \sqrt{N}$, but this is a weak effect in practice.
 
-### Sample efficiency
+### Transformer vs LSTM
 
-![[kaplan-fig5.png]]
-*Figure 5: Larger models reach any given loss level with fewer training tokens — they are more sample-efficient.*
+![[kaplan-fig7.png]]
+*Figure 7: Transformers and LSTMs are compared on loss as a function of non-embedding parameter count. LSTMs perform comparably to Transformers on tokens appearing early in the context but fall far behind on later tokens, where integrating long-range information matters.*
+
+Transformers show a better power-law scaling trend than LSTMs. The LSTM's weakness is architectural: it cannot efficiently use long-range context, so performance degrades for tokens that require information from far back in the sequence. This gap widens with scale.
+
+### Sample efficiency
 
 Each gradient step carries more signal when the model has higher capacity. This is why a 10× bigger model trained for 1/10 the steps often beats the smaller model at the same total compute.
 
 ## Optimal Compute Allocation
-
-![[kaplan-fig7.png]]
-*Figure 7: For a given compute budget, both optimal model size and optimal dataset size follow power laws in C.*
 
 Given a compute budget $C$ (FLOPs), the compute-optimal allocation is:
 
@@ -81,23 +85,6 @@ $$N_\text{opt} \propto C^{0.73}, \quad D_\text{opt} \propto C^{0.27}$$
 
 > [!warning] Chinchilla revision
 > These exponents were later shown to be biased. [[Chinchilla (Hoffmann et al. 2022)]] (2022) found $N_\text{opt} \propto C^{0.50}$ and $D_\text{opt} \propto C^{0.50}$ — scale model and data equally. The bias in Kaplan: small models were trained to convergence while large models were stopped early, inflating the apparent benefit of model size.
-
-## Things I Had to Untangle
-
-> [!question] What is $C_\text{min}$ vs. $C$?
-> $C$ is the actual FLOPs used in a training run. $C_\text{min}$ is the minimum FLOPs to reach a given loss assuming optimal training: the right batch size ($B = B_\text{crit}$) and a well-tuned LR schedule. Any real run has $C \geq C_\text{min}$; the gap grows when batch size or LR are suboptimal. The paper derives the power law for $C_\text{min}$ specifically, not for an arbitrary run.
-
-> [!tip] Why is $\alpha_C \approx 0.050$ smaller than $\alpha_N \approx 0.076$?
-> Because a compute-optimal run scales $N$ and $D$ jointly. The exponent $\alpha_C$ reflects this combined improvement, which is slower per log unit of $C$ than improving $N$ alone (you also need more data). Do not compare these exponents across variables to rank "which resource matters more."
-
-> [!question] $\alpha_D > \alpha_N$ — does that mean data scales better than parameters?
-> Marginally per unit of log-scale, yes. But this comparison ignores the different costs of acquiring data vs. parameters, and the fitting constants $N_c$, $D_c$ set the crossover point. In practice, the compute allocation determines the effective ratio.
-
-## Open Questions
-
-- [ ] Do these power laws hold beyond ~1T parameters? The paper reached ~1.5B — extrapolating 3+ orders of magnitude is a significant leap.
-- [ ] The laws are for cross-entropy loss. How do they map to downstream task performance? ([[Beyond Neural Scaling Laws]] argues the relationship is complex, task-dependent, and can show discontinuous jumps.)
-- [ ] Do these laws generalize to non-autoregressive or non-transformer architectures? (See [[LeJEPA]] and [[Looped Language Models]] for contrast.)
 
 ## Related
 

@@ -27,7 +27,7 @@ where $X \in \{N, D, C\}$ and $\alpha > 0$ is the scaling exponent. The key prop
 ## Key Findings
 
 ![[kaplan-fig1.png]]
-*Figure 1: Test loss follows power laws in N, D, and compute C across many orders of magnitude.*
+*Figure 1: Test loss follows a smooth power law in N, D, and C independently, each over many orders of magnitude. All three must be scaled together for optimal performance — fixing any one eventually makes it the bottleneck.*
 
 ### Power laws in N, D, C independently
 
@@ -58,14 +58,14 @@ Total training FLOPs for a transformer with $N$ non-embedding parameters trained
 ### Architecture insensitivity
 
 ![[kaplan-fig5.png]]
-*Figure 5: Performance depends very mildly on model shape when the total number of non-embedding parameters N is held fixed. The loss varies only a few percent over a wide range of shapes. Small differences in parameter counts are compensated for by using the fit to L(N) as a baseline. Aspect ratio in particular can vary by a factor of 40 while only slightly impacting performance; an (nlayer, dmodel) = (6, 4288) reaches a loss within 3% of the (48, 1600) model used in [RWC+19].*
+*Figure 5: Loss is largely insensitive to model shape at fixed N. Depth/width ratio can vary by 40× with only a few percent change in loss — total non-embedding parameter count, not its distribution across layers, determines performance.*
 
 At fixed total $N$, changing depth/width ratio, number of heads, or FFN multiplier has much less effect on loss than changing $N$ itself. What matters is total parameter count, not how it is distributed. The optimal depth scales roughly as $d_\text{model} \propto \sqrt{N}$, but this is a weak effect in practice.
 
 ### Transformer vs LSTM
 
 ![[kaplan-fig7.png]]
-*Figure 7: Transformers and LSTMs are compared on loss as a function of non-embedding parameter count. LSTMs perform comparably to Transformers on tokens appearing early in the context but fall far behind on later tokens, where integrating long-range information matters.*
+*Figure 7: Transformers outperform LSTMs at every model size on a per-parameter basis. The gap is position-dependent: LSTMs match Transformers on early context tokens but degrade sharply on later ones, where long-range integration matters.*
 
 Transformers show a better power-law scaling trend than LSTMs. The LSTM's weakness is architectural: it cannot efficiently use long-range context, so performance degrades for tokens that require information from far back in the sequence. This gap widens with scale.
 

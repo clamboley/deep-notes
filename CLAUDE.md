@@ -31,10 +31,10 @@ Images live in the same folder as the note and are embedded with `![[filename.pn
 - `[!warning]` — caveats, revisions, known limitations
 - `[!question]` / `[!tip]` — for untangling confusions (only add these when the user has discussed the topic)
 
-**Figures:** always include the verbatim figure caption from the paper in italics below the embed:
+**Figures:** include a caption in italics below the embed. Write it in your own words — concise, precise, focused on what the figure actually shows. Do not copy the paper verbatim (paper captions are often redundant or poorly worded). Capture the key visual claim in 1–2 sentences.
 ```
 ![[kaplan-fig5.png]]
-*Figure 5: [exact paper caption text]*
+*Figure 5: [your own description of what the figure shows]*
 ```
 
 **Writing style:** the audience is a senior DL practitioner. Skip introductory motivation. Use precise terminology (FLOPs, MFU, FSDP, TP, etc.) without defining it unless the note specifically covers it.

@@ -92,6 +92,10 @@ export default (() => {
         )}
 
         <link rel="icon" href={iconPath} />
+        <link rel="apple-touch-icon" href={joinSegments(baseDir, "static/apple-touch-icon.png")} />
+        <link rel="manifest" href={joinSegments(baseDir, "static/manifest.json")} />
+        <meta name="theme-color" content="#484D6D" />
+        <script dangerouslySetInnerHTML={{__html: `if('serviceWorker' in navigator)navigator.serviceWorker.register('${url.pathname}/sw.js')`}} />
         <meta name="description" content={description} />
         <meta name="generator" content="Quartz" />
 

@@ -1,0 +1,22 @@
+{
+  "name": "Deep Notes",
+  "short_name": "Notes",
+  "description": "Personal research notes",
+  "start_url": "/deep-notes/",
+  "scope": "/deep-notes/",
+  "display": "standalone",
+  "background_color": "#161618",
+  "theme_color": "#484D6D",
+  "icons": [
+    {
+      "src": "/deep-notes/static/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "/deep-notes/static/apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "180x180"
+    }
+  ]
+}

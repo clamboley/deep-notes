@@ -17,7 +17,7 @@ This means: for a dot product of two vectors of size $n$, you perform $n$ FMAs =
 
 ## FLOPs for nn.Linear(I, O)
 
-A linear layer computes $\mathbf{y} = \mathbf{x}\mathbf{W}^\top + \mathbf{b}$ where $\mathbf{x} \in \mathbb{R}^T \times \mathbb{R}^I$, $\mathbf{W} \in \mathbb{R}^{O \times I}$, $\mathbf{b} \in \mathbb{R}^O$, $\mathbf{y} \in \mathbb{R}^T \times \mathbb{R}^O$ and $T$ is the number of tokens.
+A linear layer computes $\mathbf{y} = \mathbf{x}\mathbf{W}^\top + \mathbf{b}$ where $\mathbf{x} \in \mathbb{R}^{T \times I}$, $\mathbf{W} \in \mathbb{R}^{O \times I}$, $\mathbf{b} \in \mathbb{R}^O$, $\mathbf{y} \in \mathbb{R}^{T \times O}$ and $T$ is the number of tokens.
 
 ### Forward pass
 

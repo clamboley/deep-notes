@@ -8,13 +8,13 @@ aliases: [Kaplan 2020, OpenAI Scaling Laws, Kaplan et al. 2020]
 ---
 
 > [!abstract] TL;DR
-> Language model performance follows smooth power laws in model size $N$, dataset size $D$, and compute $C$, each over many orders of magnitude. These laws let you predict loss before training and prescribe how to allocate a compute budget: per Kaplan, scale model size much faster than data (later revised by [[Chinchilla (Hoffmann et al. 2022)]]).
+> Language model performance follows smooth power laws in model size $N$, dataset size $D$, and compute $C$, each over many orders of magnitude. These laws let you predict loss before training and prescribe how to allocate a compute budget: per Kaplan, scale model size much faster than data (later revised by [[Chinchilla]]).
 
 ## Context
 
 January 2020, OpenAI. The transformer recipe was established, but scaling was largely heuristic. Kaplan et al. ran a systematic sweep of transformer LMs on WebText2 — varying $N$ from ~768 to 1.5B parameters, $D$ up to ~22B tokens, $C$ over many orders of magnitude — and found performance follows remarkably clean power laws across all three axes. These laws directly informed GPT-3's design six months later and kicked off the era of deliberate, law-guided scaling.
 
-Critical lineage: builds on the transformer architecture, directly motivates [[GPT-3]], and was revised by [[Chinchilla (Hoffmann et al. 2022)]] two years later.
+Critical lineage: builds on the transformer architecture, directly motivates [[GPT-3]], and was revised by [[Chinchilla]] two years later.
 
 ## What are Scaling Laws
 
@@ -84,11 +84,11 @@ $$N_\text{opt} \propto C^{0.73}, \quad D_\text{opt} \propto C^{0.27}$$
 **Key corollary**: fully converging a model is wasteful. For a large compute budget, run a bigger model for fewer steps rather than a smaller model to convergence. The early training of a bigger model beats the late training of a smaller one at equal FLOPs.
 
 > [!warning] Chinchilla revision
-> These exponents were later shown to be biased. [[Chinchilla (Hoffmann et al. 2022)]] (2022) found $N_\text{opt} \propto C^{0.50}$ and $D_\text{opt} \propto C^{0.50}$ — scale model and data equally. The bias in Kaplan: small models were trained to convergence while large models were stopped early, inflating the apparent benefit of model size.
+> These exponents were later shown to be biased. [[Chinchilla]] (2022) found $N_\text{opt} \propto C^{0.50}$ and $D_\text{opt} \propto C^{0.50}$ — scale model and data equally. The bias in Kaplan: small models were trained to convergence while large models were stopped early, inflating the apparent benefit of model size.
 
 ## Related
 
-- [[Chinchilla (Hoffmann et al. 2022)]] — the must-read follow-up; corrects the compute-optimal allocation
+- [[Chinchilla]] — the must-read follow-up; corrects the compute-optimal allocation
 - [[GPT-3]] — the first large model designed using these laws
 - [[FLOPs and MFU]] — full derivation of the 6ND formula and how to compute hardware utilization
 - [[Beyond Neural Scaling Laws]] — whether power laws hold or break at extreme scale

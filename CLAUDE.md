@@ -9,7 +9,6 @@ Personal deep learning research note system published at https://clamboley.githu
 ```
 content/
 ├── index.md
-├── templates/note-template.md   # reference before creating a new note
 ├── scaling-laws/
 ├── architectures/
 ├── pretraining/

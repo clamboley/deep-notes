@@ -38,8 +38,6 @@ Images live in the same folder as the note and are embedded with `![[filename.pn
 
 **Writing style:** the audience is a senior DL practitioner. Skip introductory motivation. Use precise terminology (FLOPs, MFU, FSDP, TP, etc.) without defining it unless the note specifically covers it.
 
-**Sections like "Things I Had to Untangle" and "Open Questions" are only added after discussing the topic** — do not pre-populate them.
-
 ## Customized Quartz files
 
 `quartz/components/Head.tsx` has been edited beyond the Quartz default:

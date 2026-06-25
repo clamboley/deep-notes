@@ -13,7 +13,7 @@ aliases: [FP8, MXFP8, NVFP4, E4M3, E5M2, E2M1, microscaling, low-precision forma
 
 A floating-point scalar is stored as **sign + exponent + mantissa**, written ExMy (x exponent bits, y mantissa bits). The exponent controls **dynamic range** — the span from smallest to largest representable magnitude. The mantissa controls **precision** — how finely values are resolved within each power-of-two interval. Cutting bits forces a tradeoff: fewer exponent bits means overflow and underflow risk; fewer mantissa bits means coarser quantization steps.
 
-![[fp8-format-comparison.png]]
+![[assets/low-precision-formats/fp8-format-comparison.png]]
 *FP16 (E5M10), BF16 (E8M7), FP8 E4M3, and FP8 E5M2 side by side. BF16 matches FP32's 8-bit exponent at the cost of mantissa precision; E4M3 preserves more mantissa than E5M2 but has narrower dynamic range.*
 
 ## BF16 — the Training Baseline
@@ -39,7 +39,7 @@ Two consequences follow directly. Because each block adapts to its own local mag
 
 MXFP8 is accelerated on Blackwell (SM 10.0+), where tensor cores handle the 32-element block and its E8M0 scale directly. Realizing the theoretical ~2× throughput gain over BF16 requires careful kernel design to avoid memory-bandwidth bottlenecks.
 
-![[fp8-vs-mxfp8-scaling-factors.png]]
+![[assets/low-precision-formats/fp8-vs-mxfp8-scaling-factors.png]]
 *FP8 assigns a single FP32 scale to the entire tensor (left); MXFP8 assigns a distinct E8M0 scale to each block of 32 consecutive values (right). The finer granularity lets each block adapt to its local magnitude rather than being dominated by the tensor's global maximum.*
 
 ## NVFP4 — 4-Bit Floating Point
@@ -51,10 +51,10 @@ NVFP4 uses **E2M1** (1 sign + 2 exponent + 1 mantissa bit), representing roughly
 
 **Why E4M3 block scales rather than E8M0?** E4M3 supports fractional (non-power-of-two) scale values, so each block scale can be chosen to minimize quantization error jointly across its 16 values. NVIDIA's analysis shows E4M3 block scales achieve MSE = 0.08 vs. MSE = 0.72 for E8M0 scales on the same data — nearly an order-of-magnitude improvement.
 
-![[e4m3-vs-e8m0-quantization.gif]]
+![[assets/low-precision-formats/e4m3-vs-e8m0-quantization.gif]]
 *The same input values quantized with E8M0 (power-of-two scale, coarse) vs. E4M3 (fractional scale, finer match). E8M0's constrained scale choices force larger rounding errors; E4M3 finds the scale that minimizes block-level MSE.*
 
-![[mxfp4-vs-nvfp4.gif]]
+![[assets/low-precision-formats/mxfp4-vs-nvfp4.gif]]
 *MXFP4 (top): 32-value blocks with E8M0 power-of-two scales. NVFP4 (bottom): 16-value blocks with E4M3 fractional scales plus a global FP32 factor. Finer blocks and fractional scales together give substantially lower quantization error.*
 
 ### NVFP4 vs. MXFP4
@@ -72,7 +72,7 @@ The 0.5-bit overhead comes from the E4M3 block scale: one 8-bit scalar per 16 va
 
 On DeepSeek-R1-0528 across MMLU-PRO, GPQA Diamond, LIVECODEBENCH, SCICODE, Math-500, and AIME 2024, NVFP4 shows ≤1% degradation from FP8. The advantage over INT4 at the same bit width: transformer weight and activation distributions span many orders of magnitude, and the floating-point per-block exponent preserves that structure better than INT4's fixed linear range.
 
-![[nvfp4-scaling.gif]]
+![[assets/low-precision-formats/nvfp4-scaling.gif]]
 *NVFP4 two-level scaling: 4-bit E2M1 values at the innermost level, E4M3 FP8 block scales applied per 16 values, and a global FP32 tensor scale.*
 
 ### Hardware and Tooling

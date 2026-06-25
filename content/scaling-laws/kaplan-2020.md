@@ -26,7 +26,7 @@ where $X \in \{N, D, C\}$ and $\alpha > 0$ is the scaling exponent. The key prop
 
 ## Key Findings
 
-![[kaplan-fig1.png]]
+![[assets/kaplan-2020/kaplan-fig1.png]]
 *Figure 1: Test loss follows a smooth power law in N, D, and C independently, each over many orders of magnitude. All three must be scaled together for optimal performance — fixing any one eventually makes it the bottleneck.*
 
 ### Power laws in N, D, C independently
@@ -57,14 +57,14 @@ Total training FLOPs for a transformer with $N$ non-embedding parameters trained
 
 ### Architecture insensitivity
 
-![[kaplan-fig5.png]]
+![[assets/kaplan-2020/kaplan-fig5.png]]
 *Figure 5: Loss is largely insensitive to model shape at fixed N. Depth/width ratio can vary by 40× with only a few percent change in loss — total non-embedding parameter count, not its distribution across layers, determines performance.*
 
 At fixed total $N$, changing depth/width ratio, number of heads, or FFN multiplier has much less effect on loss than changing $N$ itself. What matters is total parameter count, not how it is distributed. The optimal depth scales roughly as $d_\text{model} \propto \sqrt{N}$, but this is a weak effect in practice.
 
 ### Transformer vs LSTM
 
-![[kaplan-fig7.png]]
+![[assets/kaplan-2020/kaplan-fig7.png]]
 *Figure 7: Transformers outperform LSTMs at every model size on a per-parameter basis. The gap is position-dependent: LSTMs match Transformers on early context tokens but degrade sharply on later ones, where long-range integration matters.*
 
 Transformers show a better power-law scaling trend than LSTMs. The LSTM's weakness is architectural: it cannot efficiently use long-range context, so performance degrades for tokens that require information from far back in the sequence. This gap widens with scale.

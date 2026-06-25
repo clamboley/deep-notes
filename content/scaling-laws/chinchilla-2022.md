@@ -41,14 +41,14 @@ All three independently estimate $N_{opt}(C)$ and $D_{opt}(C)$, and all converge
 
 Train model families (70M–10B+) each for 4 different token horizons (cosine cycle lengths spanning 16×). For each FLOP budget, find which model + token count achieves the lowest loss. Fit power laws to the resulting $(C, N_{opt})$ and $(C, D_{opt})$ series.
 
-![[chinchilla-fig2.png]]
+![[assets/chinchilla-2022/chinchilla-fig2.png]]
 *Figure 2: Left: training loss curves for all runs. Center and right: the lower envelope of minimum-loss points, with optimal N and D fit as power laws in FLOPs. Green lines project the Gopher budget ($5.76 \times 10^{23}$ FLOPs) to ~67B parameters and ~1.5T tokens.*
 
 ### Approach 2: IsoFLOP profiles
 
 Fix 9 FLOP budgets ($6 \times 10^{18}$ to $3 \times 10^{21}$). For each budget, train models of varying size with cosine schedules matched to that budget's token count. Plot final loss vs. $N$ — each curve has a clear valley. Fit a parabola to each isoFLOP slice to extract $N_{opt}$.
 
-![[chinchilla-fig3.png]]
+![[assets/chinchilla-2022/chinchilla-fig3.png]]
 *Figure 3: Left: each isoFLOP slice has a clear loss minimum at a particular model size — the valley shifts right as compute grows. Center and right: optimal N and D extracted from those minima, fit as power laws in FLOPs.*
 
 ### Approach 3: Parametric loss model
@@ -67,7 +67,7 @@ $$N_{opt}(C) = G\!\left(\frac{C}{6}\right)^a, \quad D_{opt}(C) = G^{-1}\!\left(\
 
 where $G = \left(\frac{\alpha A}{\beta B}\right)^{1/(\alpha+\beta)}$, $a = \frac{\beta}{\alpha+\beta}$, $b = \frac{\alpha}{\alpha+\beta}$.
 
-![[chinchilla-fig4.png]]
+![[assets/chinchilla-2022/chinchilla-fig4.png]]
 *Figure 4: Left: contour plot of $\hat{L}(N,D)$ with the efficient frontier (blue) threading through the lowest-FLOP point on each iso-loss contour. Right: isoFLOP slices showing the parabolic structure. This approach predicts a slightly smaller optimal (~40B) than Approaches 1 and 2, due to the parametric fit weighting high-compute points more heavily.*
 
 ## Optimal Compute Allocation

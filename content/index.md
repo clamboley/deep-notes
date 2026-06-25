@@ -12,3 +12,4 @@ Personal research notes from reading papers and building intuition in deep learn
 - [[training/index|Training]] — training techniques, parallelism, compute efficiency, FLOPs
 - [[quantization/index|Quantization]] — low-precision training and inference
 - [[math/index|Math]] — mathematical foundations: backprop, optimization, probability
+- [[technical-reports/index|Technical Reports]] — longer technical-report summaries split by subsystem or theme

@@ -2,7 +2,7 @@ name: Deploy Deep Notes to GitHub Pages
 
 on:
   push:
-    branches: [v5]
+    branches: [main]
   workflow_dispatch:
 
 permissions:

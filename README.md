@@ -2,7 +2,7 @@
 
 A small library of visual paper notes and companion videos, published at [clamboley.github.io/deep-notes](https://clamboley.github.io/deep-notes/).
 
-The site is plain HTML, CSS, and JavaScript. GitHub Pages publishes the generated `public/` directory whenever the `v5` branch is pushed.
+The site is plain HTML, CSS, and JavaScript. GitHub Pages publishes the generated `public/` directory whenever the `main` branch is pushed.
 
 ## Add a paper
 

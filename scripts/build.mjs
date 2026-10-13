@@ -6,6 +6,7 @@ const source = join(root, "site")
 const output = join(root, "public")
 const papers = JSON.parse(await readFile(join(source, "papers.json"), "utf8"))
 const template = await readFile(join(source, "index.template.html"), "utf8")
+const videoTemplate = await readFile(join(source, "video.template.html"), "utf8")
 
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -21,14 +22,17 @@ async function localAsset(path) {
 
 const slugs = new Set()
 const cards = []
+const videoPages = []
 for (const paper of papers.sort((a, b) => b.paperDate.localeCompare(a.paperDate))) {
-  if (!paper.slug || slugs.has(paper.slug)) throw new Error(`Missing or duplicate slug: ${paper.slug}`)
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(paper.slug) || slugs.has(paper.slug)) throw new Error(`Invalid or duplicate slug: ${paper.slug}`)
   slugs.add(paper.slug)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(paper.paperDate) || Number.isNaN(Date.parse(`${paper.paperDate}T00:00:00Z`))) throw new Error(`Invalid paper date: ${paper.paperDate}`)
   const date = new Intl.DateTimeFormat("en", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(`${paper.paperDate}T00:00:00Z`))
   const cover = await localAsset(paper.cover)
   const note = await localAsset(paper.note)
   const video = paper.video ? await localAsset(paper.video) : null
+  const videoPage = video ? `papers/${paper.slug}/video.html` : null
+  if (video) videoPages.push({ slug: paper.slug, title: escapeHtml(paper.title), cover, note, video })
   const labels = paper.labels || []
   const searchable = [paper.title, paper.description, ...labels, paper.paperDate].join(" ").toLocaleLowerCase()
 
@@ -39,7 +43,7 @@ for (const paper of papers.sort((a, b) => b.paperDate.localeCompare(a.paperDate)
   </a>
   <div class="card-meta">
     <time class="card-date" datetime="${escapeHtml(paper.paperDate)}">${escapeHtml(date)}</time>
-    ${video ? `<a class="video-link" href="${video}" aria-label="Watch ${escapeHtml(paper.title)} video"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor"/><path d="m6.5 4.9 4.2 3.1-4.2 3.1V4.9Z" fill="currentColor"/></svg>Watch video</a>` : ""}
+    ${video ? `<a class="video-link" href="${videoPage}" aria-label="Watch ${escapeHtml(paper.title)} video"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor"/><path d="m6.5 4.9 4.2 3.1-4.2 3.1V4.9Z" fill="currentColor"/></svg>Watch video</a>` : ""}
   </div>
 </article>`)
 }
@@ -57,4 +61,11 @@ await writeFile(join(output, "index.html"), template
   .replace("{{YEAR_OPTIONS}}", yearOptions)
   .replace("{{LABEL_OPTIONS}}", labelOptions)
   .replace("{{PAPER_CARDS}}", cards.join("\n")))
+for (const page of videoPages) {
+  await writeFile(join(output, "papers", page.slug, "video.html"), videoTemplate
+    .replaceAll("{{TITLE}}", page.title)
+    .replaceAll("{{COVER}}", page.cover)
+    .replaceAll("{{VIDEO}}", page.video)
+    .replaceAll("{{NOTE}}", page.note))
+}
 console.log(`Built ${cards.length} paper${cards.length === 1 ? "" : "s"} in ${output}`)

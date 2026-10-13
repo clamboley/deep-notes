@@ -73,6 +73,13 @@ main.container { flex: 1; }
 .video-link svg { width: 15px; height: 15px; }
 .empty-state { margin: 40px 0 0; padding: 24px 0; color: var(--muted); }
 
+.video-page { max-width: 1000px; padding-top: 36px; padding-bottom: 80px; }
+.back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; font-weight: 500; text-decoration: none; }
+.back-link:hover { color: var(--obs); }
+.video-page h1 { margin: 42px 0 24px; font: 700 clamp(32px, 5vw, 52px)/1.1 var(--f-display); letter-spacing: -.025em; text-wrap: balance; }
+.video-page video { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 10px; background: #0e141b; }
+.note-link { display: inline-block; margin-top: 24px; color: var(--obs); font-size: 14px; font-weight: 600; text-underline-offset: 3px; }
+
 .site-footer { border-top: 1px solid var(--line); }
 .footer-inner { min-height: 78px; display: flex; align-items: center; color: var(--muted); font-size: 14px; }
 
@@ -90,6 +97,9 @@ main.container { flex: 1; }
   .search { width: 100%; }
   .paper-grid { grid-template-columns: 1fr; gap: 40px; }
   .card-title { font-size: 24px; }
+  .video-page { padding-top: 26px; padding-bottom: 64px; }
+  .video-page h1 { margin: 30px 0 20px; }
+  .video-page video { border-radius: 6px; }
   .footer-inner { min-height: 70px; }
 }
 

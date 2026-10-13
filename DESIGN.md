@@ -40,6 +40,7 @@ typography:
 rounded:
   input: "8px"
   image: "10px"
+  video-mobile: "6px"
 ---
 
 # Design System: Deep Notes
@@ -75,6 +76,8 @@ The search field has gently rounded corners. Cover images have a slightly larger
 ## Components
 
 Each card has one main link around its image and title, with a separate video link when available. The paper date sits beneath the title. Hover lifts only the cover image slightly; keyboard focus remains clearly outlined. The header uses an outlined snare-drum link to the author's main site.
+
+The video page is a focused continuation of the library: a text back link first, then the paper title, native video controls, and a small link to the note. It reuses the same cool ground and type families.
 
 ## Do's and Don'ts
 

@@ -27,6 +27,7 @@ The author reads and discusses a paper, then creates a standalone HTML note and 
 - Keep the existing `https://clamboley.github.io/deep-notes/` address.
 - Show a paper image, title, and the paper's publication date on each card.
 - Let visitors scroll, search, filter by paper year and label, and open a note. Show a separate video action when a video exists.
+- A companion video opens on a simple player page with a link back to the paper library.
 - Link the header's snare drum and sticks mark to `https://clamboley.github.io/`.
 - Work well on phones.
 - Launch the new library with V-JEPA 2 only; the older Markdown notes do not appear in it.

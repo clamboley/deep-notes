@@ -11,6 +11,6 @@ The site is plain HTML, CSS, and JavaScript. GitHub Pages publishes the generate
 3. Add an entry to `site/papers.json`. Use the **paper's original publication date** in `paperDate` (`YYYY-MM-DD`), not the date the note was written. Put the paper's filter categories in `labels` and omit `video` when there isn't one.
 4. Run `node scripts/build.mjs` and open `public/index.html` to check the result.
 
-The build sorts cards by paper publication date, newest first, and checks that every referenced local file exists. Each paper page remains a standalone HTML artifact. The year and label filters are generated from `papers.json`; search covers title, description, labels, and paper date.
+The build sorts cards by paper publication date, newest first, and checks that every referenced local file exists. Each paper page remains a standalone HTML artifact. When a paper has a video, the build creates a small video page with a link back to the library. The year and label filters are generated from `papers.json`; search covers title, description, labels, and paper date.
 
 The previous Quartz notes are no longer part of the site; they remain available in Git history.

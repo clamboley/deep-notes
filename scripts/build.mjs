@@ -7,6 +7,8 @@ const output = join(root, "public")
 const papers = JSON.parse(await readFile(join(source, "papers.json"), "utf8"))
 const template = await readFile(join(source, "index.template.html"), "utf8")
 const videoTemplate = await readFile(join(source, "video.template.html"), "utf8")
+const headerTemplate = await readFile(join(source, "header.template.html"), "utf8")
+const headerFor = (rootPath) => headerTemplate.replace("{{ROOT}}", rootPath)
 
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -23,13 +25,16 @@ async function localAsset(path) {
 const slugs = new Set()
 const cards = []
 const videoPages = []
+const notePages = []
 for (const paper of papers.sort((a, b) => b.paperDate.localeCompare(a.paperDate))) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(paper.slug) || slugs.has(paper.slug)) throw new Error(`Invalid or duplicate slug: ${paper.slug}`)
   slugs.add(paper.slug)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(paper.paperDate) || Number.isNaN(Date.parse(`${paper.paperDate}T00:00:00Z`))) throw new Error(`Invalid paper date: ${paper.paperDate}`)
   const date = new Intl.DateTimeFormat("en", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(`${paper.paperDate}T00:00:00Z`))
   const cover = await localAsset(paper.cover)
+  if (paper.note !== `papers/${paper.slug}/index.html`) throw new Error(`Expected note at papers/${paper.slug}/index.html`)
   const note = await localAsset(paper.note)
+  notePages.push(paper.note)
   const video = paper.video ? await localAsset(paper.video) : null
   const videoPage = video ? `papers/${paper.slug}/video.html` : null
   if (video) videoPages.push({ slug: paper.slug, title: escapeHtml(paper.title), cover, note, video })
@@ -50,19 +55,29 @@ for (const paper of papers.sort((a, b) => b.paperDate.localeCompare(a.paperDate)
 
 await rm(output, { recursive: true, force: true })
 await mkdir(output, { recursive: true })
-for (const name of ["assets", "papers", "videos", "styles.css", "app.js"]) {
+for (const name of ["assets", "papers", "videos", "header.css", "styles.css", "app.js"]) {
   await cp(join(source, name), join(output, name), { recursive: true })
+}
+for (const note of notePages) {
+  const file = join(output, note)
+  const html = await readFile(file, "utf8")
+  if (!/<\/head>/i.test(html) || !/<body(?:\s[^>]*)?>/i.test(html)) throw new Error(`Note must be a full HTML page: ${note}`)
+  await writeFile(file, html
+    .replace(/<\/head>/i, '<link rel="stylesheet" href="../../header.css"></head>')
+    .replace(/<body(?:\s[^>]*)?>/i, (body) => `${body}\n${headerFor("../../")}`))
 }
 const years = [...new Set(papers.map((paper) => paper.paperDate.slice(0, 4)))].sort().reverse()
 const labels = [...new Set(papers.flatMap((paper) => paper.labels || []))].sort((a, b) => a.localeCompare(b))
 const yearOptions = `<option value="">All years</option>${years.map((year) => `<option value="${escapeHtml(year)}">${escapeHtml(year)}</option>`).join("")}`
 const labelOptions = `<option value="">All labels</option>${labels.map((label) => `<option value="${escapeHtml(labelKey(label))}">${escapeHtml(label)}</option>`).join("")}`
 await writeFile(join(output, "index.html"), template
+  .replace("{{SITE_HEADER}}", headerFor("./"))
   .replace("{{YEAR_OPTIONS}}", yearOptions)
   .replace("{{LABEL_OPTIONS}}", labelOptions)
   .replace("{{PAPER_CARDS}}", cards.join("\n")))
 for (const page of videoPages) {
   await writeFile(join(output, "papers", page.slug, "video.html"), videoTemplate
+    .replace("{{SITE_HEADER}}", headerFor("../../"))
     .replaceAll("{{TITLE}}", page.title)
     .replaceAll("{{COVER}}", page.cover)
     .replaceAll("{{VIDEO}}", page.video)

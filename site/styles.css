@@ -35,13 +35,6 @@ button, input, select { font: inherit; }
 .container { width: min(100% - 48px, 1180px); margin-inline: auto; }
 main.container { flex: 1; }
 
-.site-header { border-bottom: 1px solid var(--line); }
-.header-inner { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-.brand { font: 700 19px/1 var(--f-display); letter-spacing: -.025em; text-decoration: none; }
-.brand-dot { color: var(--obs); }
-.home-link { width: 48px; height: 48px; display: grid; place-items: center; color: var(--ink); text-decoration: none; border: 1px solid var(--line); border-radius: 10px; transition: color .18s, border-color .18s; }
-.home-link:hover { color: var(--obs); border-color: var(--obs); }
-
 .library { padding: clamp(42px, 5vw, 68px) 0 96px; }
 .library-bar { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 28px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
 .filters { display: flex; gap: 10px; }
@@ -88,8 +81,6 @@ main.container { flex: 1; }
 }
 @media (max-width: 620px) {
   .container { width: min(100% - 36px, 1180px); }
-  .header-inner { min-height: 62px; }
-  .home-link { width: 44px; height: 44px; }
   .library { padding-top: 34px; padding-bottom: 72px; }
   .library-bar { align-items: stretch; flex-direction: column; gap: 12px; }
   .filters { width: 100%; }

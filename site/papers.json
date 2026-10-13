@@ -1,0 +1,13 @@
+[
+  {
+    "slug": "v-jepa-2",
+    "title": "V-JEPA 2",
+    "paperDate": "2025-06-11",
+    "description": "Self-supervised video models for understanding, prediction, and planning.",
+    "labels": ["Video", "World models", "Robotics"],
+    "cover": "assets/v-jepa-2-cover.svg",
+    "coverAlt": "Observed video frames feed an encoder, whose features guide a predicted future and a goal.",
+    "note": "papers/v-jepa-2/index.html",
+    "video": "videos/v-jepa-2.mp4"
+  }
+]

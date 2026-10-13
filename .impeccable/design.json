@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-13T00:00:00Z",
+  "title": "Design System: Deep Notes",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Observed Blue", "canonical": "#2f62d6", "tonalRamp": ["#0b1a40", "#153073", "#2249a5", "#2f62d6", "#6688e4", "#9bb3ed", "#ccd9f7", "#e9effc"] },
+      "neutral-bg": { "role": "neutral", "displayName": "Cool Paper", "canonical": "#f3f5f8", "tonalRamp": ["#17202b", "#303c4a", "#515e6d", "#778394", "#9da8b5", "#c1c9d2", "#dfe4ea", "#f3f5f8"] }
+    },
+    "typographyMeta": {
+      "title": { "displayName": "Archivo Title", "purpose": "Site and paper titles." },
+      "body": { "displayName": "Plex Body", "purpose": "Short descriptions and controls." },
+      "control": { "displayName": "Plex Control", "purpose": "Filters, search, and small links." },
+      "label": { "displayName": "Plex Mono", "purpose": "Dates and counts." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "cover-hover", "value": "transform 0.35s cubic-bezier(.2,.8,.2,1)", "purpose": "A small response when opening a paper." }
+    ],
+    "breakpoints": [
+      { "name": "two-columns", "value": "850px" },
+      { "name": "one-column", "value": "620px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Paper Card",
+      "kind": "card",
+      "description": "A paper image and title with publication date and optional video action.",
+      "html": "<a class=\"ds-card\" href=\"#\"><span class=\"ds-cover\"></span><strong>V-JEPA 2</strong><small>June 11, 2025</small></a>",
+      "css": ".ds-card{display:block;max-width:360px;color:#152030;text-decoration:none;font-family:Archivo,Arial,sans-serif}.ds-cover{display:block;aspect-ratio:1.55;background:#e7ebf0;border-radius:10px;margin-bottom:15px}.ds-card strong{display:block;font-size:24px}.ds-card small{display:block;margin-top:10px;color:#5a6676;font:12px 'IBM Plex Mono',monospace}.ds-card:hover strong{color:#2f62d6}.ds-card:focus-visible{outline:2px solid #2f62d6;outline-offset:4px}"
+    },
+    {
+      "name": "Paper Filter",
+      "kind": "input",
+      "description": "A compact year or label selector above the papers.",
+      "html": "<select class=\"ds-filter\" aria-label=\"Filter by year\"><option>All years</option><option>2025</option></select>",
+      "css": ".ds-filter{height:44px;min-width:146px;padding:0 15px;border:1px solid #d3dae3;border-radius:8px;background:#fff;color:#152030;font:500 14px 'IBM Plex Sans',sans-serif}.ds-filter:hover{border-color:#5a6676}.ds-filter:focus-visible{outline:2px solid #2f62d6;outline-offset:2px}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "description": "Searches the paper library.",
+      "html": "<input class=\"ds-search\" placeholder=\"Search papers\" aria-label=\"Search papers\">",
+      "css": ".ds-search{height:42px;padding:0 12px;border:1px solid #d3dae3;border-radius:8px;background:#fff;color:#152030;font:14px 'IBM Plex Sans',sans-serif}.ds-search:focus-visible{outline:2px solid #2f62d6;outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The visual paper index",
+    "overview": "The library is a quiet entrance to self-contained paper explanations. Covers carry the paper's subject; the surrounding interface stays spare.",
+    "keyCharacteristics": ["Cool surfaces", "Precise lettering", "Subject-specific diagrams"],
+    "rules": [{ "name": "The Meaning Rule", "body": "Accent colors express roles or actions, not decoration.", "section": "colors" }],
+    "dos": ["Give every paper a specific visual cover tied to its subject.", "Display the original paper publication date."],
+    "donts": ["Add tags, abstracts, or decorative badges to the card surface."]
+  }
+}

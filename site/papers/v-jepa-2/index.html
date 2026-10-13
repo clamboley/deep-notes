@@ -1,0 +1,896 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>V-JEPA 2 Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<style>
+/* Layout: one reading column (~42rem) with figures widening to ~56rem; sticky stage index.
+   Color encodes role everywhere: blue = observed/encoded from real frames, rose = predicted by a model, amber = target/goal. */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --soft:#E7EBF0; --line:#D3DAE3; --ink:#152030; --muted:#5A6676;
+  --obs:#2F62D6; --pred:#C7306B; --goal:#B88300;
+  --obs-t:#E2EAFA; --pred-t:#F8E2EA; --goal-t:#F5EBD2;
+  --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --f-math:"STIX Two Text","Cambria Math","Times New Roman",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E141B; --surface:#151D27; --soft:#1D2733; --line:#2A3542; --ink:#E3E9F0; --muted:#97A3B2;
+    --obs:#6A90F0; --pred:#E26092; --goal:#C99A22;
+    --obs-t:#1A2945; --pred-t:#3A1B2A; --goal-t:#33290F; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E141B; --surface:#151D27; --soft:#1D2733; --line:#2A3542; --ink:#E3E9F0; --muted:#97A3B2;
+  --obs:#6A90F0; --pred:#E26092; --goal:#C99A22;
+  --obs-t:#1A2945; --pred-t:#3A1B2A; --goal-t:#33290F; color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 1rem/1.62 var(--f-body);-webkit-font-smoothing:antialiased}
+a{color:var(--obs);text-underline-offset:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--obs);outline-offset:2px;border-radius:4px}
+.wrap{max-width:58rem;margin:0 auto;padding-inline:20px;padding-block:0 4rem}
+.prose{max-width:42rem}
+p{margin:0 0 .9rem}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+.m{font-family:var(--f-math);font-size:1.12em;white-space:nowrap}
+.m i{font-style:italic}
+.c-obs{color:var(--obs)} .c-pred{color:var(--pred)} .c-goal{color:var(--goal)}
+.mono{font-family:var(--f-mono)}
+.tab{font-variant-numeric:tabular-nums}
+
+/* index */
+nav.index{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav.index .in{max-width:58rem;margin:0 auto;padding-inline:20px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav.index .in::-webkit-scrollbar{display:none}
+nav.index a{flex:none;font:500 .78rem/1 var(--f-mono);color:var(--muted);text-decoration:none;padding:12px 8px;border-bottom:2px solid transparent;letter-spacing:.02em}
+nav.index a:hover{color:var(--ink)}
+nav.index a.on{color:var(--ink);border-bottom-color:var(--ink)}
+
+/* header */
+header.top{padding-block:3rem 1.5rem}
+.meta{font:500 .75rem/1.5 var(--f-mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+h1{font-size:clamp(3rem,11vw,5.4rem);font-weight:800;font-stretch:125%;letter-spacing:-.02em;line-height:.95;margin:.6rem 0 .7rem}
+.subtitle{font-size:1.15rem;color:var(--ink);max-width:36rem;margin-bottom:.6rem}
+.authors{font-size:.875rem;color:var(--muted);margin-bottom:1.6rem}
+.thesis{font-size:1.06rem;max-width:42rem}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.85rem;color:var(--muted);margin-top:1rem}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block;flex:none}
+
+/* pipeline */
+.pipe{display:grid;grid-template-columns:1fr auto 1.2fr auto 1.2fr auto 1.2fr;align-items:stretch;gap:0;margin-top:2rem}
+.pnode{display:flex;flex-direction:column;gap:4px;padding:12px 12px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);text-decoration:none;min-width:0;transition:border-color .2s,transform .2s}
+a.pnode:hover{border-color:var(--ink);transform:translateY(-2px)}
+.pnode .k{font:500 .7rem/1 var(--f-mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.pnode b{font:700 1rem/1.2 var(--f-display);font-stretch:108%}
+.pnode small{font-size:.8rem;color:var(--muted);line-height:1.4}
+.pnode.data{background:transparent;border-style:dashed}
+.pconn{position:relative;width:34px;align-self:center;height:2px;background:var(--line)}
+.pconn::after{content:"";position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left:7px solid var(--line);border-right:0}
+.pconn i{position:absolute;top:-3px;left:0;width:8px;height:8px;border-radius:50%;background:var(--obs);animation:flow 2.4s linear infinite}
+@keyframes flow{from{left:-2px;opacity:0}15%{opacity:1}85%{opacity:1}to{left:26px;opacity:0}}
+.pside{grid-column:3 / span 1;margin-top:8px;font-size:.78rem;color:var(--muted);padding-left:12px;border-left:2px solid var(--line)}
+@media (max-width:760px){
+  .pipe{grid-template-columns:1fr}
+  .pconn{width:2px;height:22px;justify-self:center}
+  .pconn::after{right:auto;left:-4px;top:auto;bottom:-1px;border:5px solid transparent;border-top:7px solid var(--line);border-bottom:0}
+  .pconn i{left:-3px;top:0;animation-name:flowv}
+  @keyframes flowv{from{top:-2px;opacity:0}15%{opacity:1}85%{opacity:1}to{top:16px;opacity:0}}
+  .pside{grid-column:auto;margin:6px 0 0 0}
+}
+
+/* recap */
+.recap{margin-top:2.2rem;padding:18px 20px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.recap h3{font-size:.8rem;font-family:var(--f-mono);font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem}
+.recap ul{margin:0;padding-left:1.1rem;display:grid;gap:.45rem}
+.recap li{padding-left:.2rem}
+
+/* sections */
+section.stage{padding-top:3.5rem;scroll-margin-top:3rem}
+.eyebrow{display:flex;align-items:center;gap:10px;font:500 .75rem/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.7rem}
+.eyebrow .n{display:inline-grid;place-items:center;width:22px;height:22px;border:1.5px solid var(--ink);border-radius:5px;color:var(--ink);letter-spacing:0}
+.chip{font:500 .7rem/1 var(--f-mono);letter-spacing:.04em;text-transform:none;padding:4px 7px;border-radius:99px;border:1px solid var(--pred);color:var(--pred)}
+h2{font-size:clamp(1.55rem,4.4vw,2.15rem);font-weight:700;font-stretch:112%;letter-spacing:-.01em;line-height:1.12;margin-bottom:.9rem}
+h3.sub{font-size:1.12rem;font-weight:650;font-stretch:105%;margin:2.2rem 0 .6rem}
+.lede{font-size:1.04rem}
+
+/* figure panels */
+.fig{margin:1.4rem 0 1.6rem;padding:16px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.fig .bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:12px}
+.fig figcaption{font-size:.84rem;color:var(--muted);margin-top:12px;max-width:44rem;line-height:1.5}
+.fig figcaption b{color:var(--ink);font-weight:600}
+.readout{font:400 .8rem/1.5 var(--f-mono);color:var(--ink);margin-top:10px;min-height:1.2em}
+canvas{display:block;width:100%}
+svg{display:block;max-width:100%;height:auto}
+
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{font:500 .78rem/1 var(--f-body);padding:8px 11px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.btn{font:500 .78rem/1 var(--f-body);padding:8px 12px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+label.sl{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted)}
+input[type=range]{accent-color:var(--ink);width:130px}
+
+/* equations */
+.eq{margin:1.2rem 0;padding:14px 16px;border-left:3px solid var(--ink);background:var(--surface);border-radius:0 8px 8px 0}
+.eq .row{overflow-x:auto;padding-bottom:2px}
+.eq .lbl{font:500 .7rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:.8rem 0 .3rem}
+.eq .lbl:first-child{margin-top:0}
+.eq p{margin:0;font-size:.94rem;max-width:42rem}
+.eq + .eq{margin-top:-.4rem}
+
+/* why list */
+.why{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:12px 22px;margin:1.2rem 0}
+.why div{min-width:0}
+.why b{display:block;font:650 .95rem/1.3 var(--f-display);font-stretch:104%;margin-bottom:.25rem}
+.why p{font-size:.9rem;color:var(--muted);margin:0}
+
+/* facts list */
+dl.facts{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:1rem 0;font-size:.92rem}
+dl.facts dt{font:500 .78rem/1.7 var(--f-mono);color:var(--muted)}
+dl.facts dd{margin:0;min-width:0}
+@media (max-width:520px){dl.facts{grid-template-columns:1fr;gap:0}dl.facts dd{margin-bottom:8px}}
+
+/* details */
+details{margin:1rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+details + details{margin-top:-1rem;border-top:0}
+summary{cursor:pointer;list-style:none;padding:11px 0;font-weight:500;display:flex;gap:10px;align-items:baseline}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:var(--f-mono);color:var(--muted);width:12px;flex:none}
+details[open] summary::before{content:"−"}
+summary .q{font-family:var(--f-mono);font-size:.7rem;color:var(--pred);letter-spacing:.06em;text-transform:uppercase;flex:none}
+details .body{padding:0 0 14px 22px;font-size:.93rem;max-width:44rem}
+
+/* masking */
+.maskwrap{position:relative}
+
+/* attention grid */
+.figlead{font-size:.9rem;margin:0 0 14px;max-width:44rem}
+.attn{display:grid;gap:1px;max-width:440px;user-select:none}
+.attn .h{font:400 .62rem/1 var(--f-mono);color:var(--muted);text-align:center;padding-bottom:3px}
+.attn .rl{font:400 .66rem/1 var(--f-mono);color:var(--muted);padding-right:6px;display:flex;align-items:center;justify-content:flex-end;cursor:pointer}
+.attn .c{aspect-ratio:1;border-radius:2px;background:var(--soft);cursor:pointer}
+.attn .c.ok{background:color-mix(in srgb,var(--obs) 32%,var(--surface))}
+.attn .c.ok.s{background:var(--obs)}
+.attn .c.s:not(.ok){background:var(--soft);outline:1px solid var(--line);outline-offset:-1px}
+.attn .stp{font:500 .62rem/1 var(--f-mono);color:var(--muted);text-align:center;padding:0 0 4px;border-bottom:1px solid var(--line);margin:0 2px 2px}
+.attn .rl.s{color:var(--ink);font-weight:500}
+
+/* tf svg */
+#tfSvg{max-width:480px;margin:0 auto}
+#loopSvg{max-width:520px;margin:0 auto}
+.tf .nd circle{stroke-width:1.6}
+.tf .nd.obs circle{fill:var(--obs-t);stroke:var(--obs)}
+.tf .nd.pred circle{fill:var(--pred-t);stroke:var(--pred)}
+.tf .ring{fill:none;stroke:var(--goal);stroke-width:2}
+.tf text{font-family:var(--f-math);font-size:17px;fill:var(--ink)}
+.tf .t-sm{font-family:var(--f-mono);font-size:11px;fill:var(--muted)}
+.tf .t-act{font-family:var(--f-math);font-style:italic;font-size:14px;fill:var(--muted)}
+.tf .t-l1{font-family:var(--f-mono);font-size:10.5px;fill:var(--goal)}
+.tf .ar{fill:none;stroke:var(--muted);stroke-width:1.5}
+.tf .ar.p{stroke:var(--pred)}
+.tf .l1{stroke:var(--goal);stroke-width:1.6;stroke-dasharray:3 3}
+.tf [data-s]{transition:opacity .35s}
+.tf .off{opacity:.1}
+.tf .dim{opacity:.28}
+
+/* loop svg */
+.loop .seg-p{fill:none;stroke:var(--muted);stroke-width:1.5}
+.loop rect.box{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.loop rect.box.g{fill:var(--goal-t);stroke:var(--goal)}
+.loop rect.box.p{stroke:var(--pred)}
+.loop text{font-family:var(--f-body);font-size:13px;fill:var(--ink)}
+.loop .tt{font-family:var(--f-mono);font-size:10.5px;fill:var(--muted);letter-spacing:.04em}
+.loop .dot{fill:var(--obs)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:1.2rem 0}
+.stats div{background:var(--surface);padding:12px 14px;min-width:0}
+.stats b{display:block;font:700 1.6rem/1.1 var(--f-display);font-stretch:110%;font-variant-numeric:tabular-nums}
+.stats span{font-size:.78rem;color:var(--muted);line-height:1.35;display:block;margin-top:3px}
+@media (max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+/* subgoal strip */
+.sgs{display:flex;gap:3px;margin-top:6px}
+.sgs .grp{display:flex;flex-direction:column;gap:6px;min-width:0}
+.sgs .cells{display:flex;gap:2px}
+.sgs .cells i{flex:1;height:18px;border-radius:2px;background:var(--goal)}
+.sgs .grp:nth-child(1) i{opacity:.4}
+.sgs .grp:nth-child(2) i{opacity:.68}
+.sgs .grp small{font-size:.74rem;color:var(--muted);line-height:1.3}
+.sgs .grp small b{color:var(--ink);font-weight:600;display:block}
+
+/* scaling chart */
+.sc{display:grid;gap:4px;margin-top:0}
+.sc .r{display:grid;grid-template-columns:minmax(8rem,11rem) 1fr 2.6rem;align-items:center;gap:10px;font-size:.82rem}
+.sc .r span:first-child{color:var(--muted);line-height:1.25}
+.sc .tr{position:relative;height:16px;margin-top:10px}
+.sc .tr::before{content:"";position:absolute;left:0;right:0;top:7.5px;height:1px;background:var(--line)}
+.sc .seg-i{position:absolute;top:6px;height:4px;border-radius:2px;background:var(--obs-t)}
+.sc .d{position:absolute;top:3px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--obs);box-shadow:0 0 0 2px var(--surface)}
+.sc .v{font:500 .8rem/1 var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+.sc .ax{display:grid;grid-template-columns:minmax(8rem,11rem) 1fr 2.6rem;gap:10px}
+.sc .ax .tk{position:relative;height:14px;font:400 .68rem/1 var(--f-mono);color:var(--muted)}
+.sc .ax .tk span{position:absolute;transform:translateX(-50%)}
+.sc .inc{font:400 .68rem/1 var(--f-mono);color:var(--obs);position:absolute;top:-9px;transform:translateX(-50%)}
+@media (max-width:520px){.sc .r,.sc .ax{grid-template-columns:6.6rem 1fr 2.4rem;gap:8px}}
+
+/* tables */
+.tw{overflow-x:auto}
+table{border-collapse:collapse;font-size:.84rem;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:7px 10px 7px 0;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+th{font:500 .7rem/1.2 var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+td.n,th.n{text-align:right}
+.wbar{display:inline-block;height:8px;border-radius:2px;background:var(--muted);opacity:.55;vertical-align:middle;margin-right:8px}
+tr.hl td{font-weight:600}
+
+/* results bars */
+.rb{display:grid;gap:10px}
+.rb .row{display:grid;grid-template-columns:minmax(7.5rem,10rem) 1fr;gap:12px;align-items:center}
+.rb .row > span{font-size:.84rem;line-height:1.25}
+.rb .row > span small{display:block;color:var(--muted);font-size:.74rem}
+.rb .bars{display:grid;gap:3px;min-width:0}
+.rb .b{display:flex;align-items:center;gap:6px;font:500 .74rem/1 var(--f-mono);font-variant-numeric:tabular-nums}
+.rb .b i{display:block;height:9px;border-radius:0 3px 3px 0;min-width:2px}
+.rb .b.o i{background:var(--muted);opacity:.55}
+.rb .b.v i{background:var(--obs)}
+.rb .b.o{color:var(--muted)}
+
+.other{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:12px;margin-top:1rem}
+.other div{padding:14px;border:1px solid var(--line);border-radius:10px;min-width:0}
+.other .k{font:500 .7rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.other b{display:block;font:700 1.45rem/1.1 var(--f-display);font-stretch:110%;margin:.45rem 0 .2rem;font-variant-numeric:tabular-nums}
+.other p{font-size:.84rem;color:var(--muted);margin:0}
+
+ul.lim{padding-left:1.1rem;display:grid;gap:.6rem;margin:1rem 0}
+ul.lim b{font-weight:600}
+footer{margin-top:3.5rem;padding-top:1rem;border-top:1px solid var(--line);font-size:.8rem;color:var(--muted)}
+
+@media (prefers-reduced-motion: reduce){
+  .pconn i{animation:none;display:none}
+  *{transition:none!important}
+}
+</style>
+
+<nav class="index" aria-label="Sections"><div class="in">
+  <a href="#top">Overview</a><a href="#s1">1 · Pretraining</a><a href="#s2">2 · Action model</a><a href="#s3">3 · Planning</a><a href="#results">Results</a><a href="#limits">Limits</a>
+</div></nav>
+
+<div class="wrap">
+
+<header class="top" id="top">
+  <div class="meta">Paper note · FAIR at Meta · June 2025 · <a href="https://arxiv.org/abs/2506.09985">arXiv 2506.09985</a> · <a href="https://github.com/facebookresearch/vjepa2">code</a></div>
+  <h1>V-JEPA 2</h1>
+  <p class="subtitle">Self-Supervised Video Models Enable Understanding, Prediction and Planning</p>
+  <p class="authors">Assran, Bardes, Fan, Garrido, Howes, Komeili, Muckley, … LeCun, Rabbat, Ballas</p>
+  <p class="thesis">Pretrain a video encoder by predicting the <em>features</em> of masked spacetime regions (1M+ hours of video, no actions, no pixel reconstruction). Freeze it. Train a small action-conditioned predictor on 62 h of robot video. Control a robot arm by searching for the actions whose predicted embedding lands closest to the embedding of a goal image.</p>
+  <div class="legend" aria-label="Color code">
+    <span><i class="sw" style="background:var(--obs)"></i>observed: encoded from real frames</span>
+    <span><i class="sw" style="background:var(--pred)"></i>predicted by a model</span>
+    <span><i class="sw" style="background:var(--goal)"></i>target or goal</span>
+  </div>
+
+  <div class="pipe" role="list">
+    <div class="pnode data" role="listitem"><span class="k">Data</span><b>Video + images</b><small>VideoMix22M: 22M samples, 1M+ hours</small></div>
+    <div class="pconn" aria-hidden="true"><i></i></div>
+    <a class="pnode" href="#s1" role="listitem"><span class="k">Stage 1</span><b>V-JEPA 2</b><small>Mask denoising in feature space. ViT-g encoder, 1B params</small></a>
+    <div class="pconn" aria-hidden="true"><i></i></div>
+    <a class="pnode" href="#s2" role="listitem"><span class="k">Stage 2 · encoder frozen</span><b>V-JEPA 2-AC</b><small>New 300M predictor: next-frame embedding given action and arm state. 62 h of Droid</small></a>
+    <div class="pconn" aria-hidden="true"><i></i></div>
+    <a class="pnode" href="#s3" role="listitem"><span class="k">Stage 3 · test time</span><b>Planning</b><small>CEM over actions toward a goal image, re-planned every step. Franka arms, zero-shot</small></a>
+    <div class="pside">Same frozen encoder also feeds attentive probes (SSv2, EK100) and an LLM for video QA</div>
+  </div>
+
+  <div class="recap">
+    <h3>Keep in mind</h3>
+    <ul>
+      <li>Everything lives in the frozen encoder's embedding space: training targets, predictions, goals. Nothing is decoded to pixels.</li>
+      <li>Actions only appear in stage 2, and they come for free: an action is the change in end-effector state between two frames.</li>
+      <li>The world model is never trained to act. Acting is test-time optimization: minimize the distance between the imagined embedding and the goal embedding.</li>
+      <li>In the experiments the planning horizon is 1 and the plan is redone after every move, so control is greedy. Pick-and-place needs hand-given sub-goal images.</li>
+      <li>16 s per action versus 4 min for the pixel-space Cosmos world model, with higher success on every task.</li>
+    </ul>
+  </div>
+</header>
+
+<!-- ============ STAGE 1 ============ -->
+<section class="stage" id="s1">
+  <div class="eyebrow"><span class="n">1</span>Pretraining · action-free · self-supervised</div>
+  <h2>Predict masked video in feature space</h2>
+  <p class="lede prose">The clip is cut into tokens, most of them are hidden, and the model must predict the <em>representations</em> of the hidden tokens from the visible ones.</p>
+
+  <figure class="fig">
+    <div class="bar">
+      <button class="btn" id="mNew">Resample</button>
+    </div>
+    <div class="maskwrap"><canvas id="maskCanvas" aria-label="Short-range and long-range masks applied to the same clip"></canvas></div>
+    <div class="readout" id="maskStats"></div>
+    <figcaption><b>Every training clip gets both masks.</b> The encoder and predictor run once per mask (two forward passes), and the EMA target is computed once for the full clip and shared. Short-range masks hide many small regions, so the context stays close to what is hidden. Long-range masks hide most of the frame, so the model must infer large regions from little context. Both are <b>tubes</b>: the same spatial pattern at every time step, so a hidden region can't be recovered by looking at a neighbouring frame. One square = one token = a <b>tubelet</b> of 2 frames × 16×16 px; drawn at 8×8 per step, while the real 16-frame 256² clip has 8×16×16 = 2048 tokens. <b>Blue</b>: visible, fed to the encoder. <b>Grey</b>: masked, dropped. V-JEPA 1 reports ~90% masked on average; this coarse grid gives lower ratios for short-range masks.</figcaption>
+  </figure>
+
+  <figure class="fig">
+    <svg id="archSvg" viewBox="0 0 640 250" role="img" aria-label="Context encoder, predictor and EMA target encoder"></svg>
+    <figcaption>Two paths over the same clip. Top: the encoder sees only visible tokens; the predictor adds one learnable mask token per hidden position (it carries only the position) and outputs a feature for each. Bottom: an EMA copy of the encoder sees the full clip and produces the targets, with no gradient. Only the top path is trained by backprop. The top path runs once per mask (short-range and long-range); the bottom path runs once per clip.</figcaption>
+  </figure>
+
+  <div class="eq">
+    <div class="lbl">Objective (eq. 1)</div>
+    <div class="row"><span class="m">min<sub><i>θ</i>, <i>φ</i>, Δ<sub><i>y</i></sub></sub>&nbsp; ‖ <span class="c-pred"><i>P</i><sub><i>φ</i></sub>(Δ<sub><i>y</i></sub>, <i>E</i><sub><i>θ</i></sub>(<i>x</i>))</span> − <span class="c-goal">sg(<i>E</i><sub><i>θ̄</i></sub>(<i>y</i>))</span> ‖<sub>1</sub></span></div>
+    <div class="lbl">In words</div>
+    <p>Given what the encoder made of the visible tokens, plus a placeholder for each hidden position, the predictor must output the features that the EMA encoder computes for those positions when it sees the whole clip. L1 distance, on masked positions only. <i>x</i> = masked clip, <i>y</i> = full clip, sg = stop-gradient.</p>
+  </div>
+
+  <div class="why">
+    <div><b>Features, not pixels</b><p>Pixel targets force the model to spend capacity on unpredictable detail (texture, noise). Feature targets let it keep what is predictable: objects, positions, motion.</p></div>
+    <div><b>No collapse</b><p>If both sides were trained freely, mapping everything to a constant would minimize the loss. Stop-gradient and a slow EMA target prevent that.</p></div>
+    <div><b>Cheap and hard</b><p>Masked tokens are dropped, so the 1B encoder processes only the ~10% that is visible, and inferring the rest requires real spatiotemporal understanding.</p></div>
+  </div>
+
+  <h3 class="sub">What scaling bought</h3>
+  <figure class="fig">
+    <div class="sc" id="scaleChart"></div>
+    <figcaption>Average accuracy over 6 frozen-probe tasks (SSv2, Diving-48, Jester, K400, COIN, ImageNet), each ingredient added on top of the previous one. Start: V-JEPA 1 recipe with ViT-L/16. Paper Fig. 3.</figcaption>
+  </figure>
+
+  <figure class="fig">
+    <div class="tw"><table>
+      <thead><tr><th>VideoMix22M source</th><th class="n">Hours</th><th>Sampling weight</th></tr></thead>
+      <tbody id="mixRows"></tbody>
+    </table></div>
+    <figcaption>YT-Temporal-1B is filtered by retrieval: scene embeddings are clustered and kept to match a target distribution built from Kinetics, SSv2, COIN and EPIC-Kitchens (+1.4 avg points over uncurated, ViT-L). Images are repeated into 16 identical frames.</figcaption>
+  </figure>
+
+  <details>
+    <summary>Training schedule and resolution</summary>
+    <div class="body">Warmup (12K it) and a long constant-LR phase (228K it) run on short, low-resolution clips: 16 frames at 256². Only the final cooldown (12K it, LR decayed) moves to longer, sharper clips, up to 64 frames at 384². This gives a model that handles 64×384² inputs at 8.4× less GPU time than training at that resolution throughout. Position encoding is 3D-RoPE (feature dims split across time, height, width), which they found stabilizes the largest models.</div>
+  </details>
+</section>
+
+<!-- ============ STAGE 2 ============ -->
+<section class="stage" id="s2">
+  <div class="eyebrow"><span class="n">2</span>Post-training · encoder frozen</div>
+  <h2>V-JEPA 2-AC: an action-conditioned predictor</h2>
+  <p class="lede prose">Stage 2 keeps the stage-1 encoder, frozen, and works entirely on its embeddings. A new predictor learns to map past embeddings, actions and arm states to the <em>next frame's</em> embedding, i.e. the dynamics of the world inside the stage-1 representation space.</p>
+
+  <dl class="facts">
+    <dt>data</dt><dd>Droid: teleoperated Franka Panda with a 2-finger gripper. Clips ≥ 4 s only, leaving under 62 h (23k trajectories, successes and failures). No reward, task label or success flag is used.</dd>
+    <dt>clip</dt><dd>4 s at 4 fps → 16 frames at 256×256.</dd>
+    <dt>state <span class="m"><i>s<sub>k</sub></i></span></dt><dd>7-D end-effector state: position (3), Euler orientation (3), gripper (1).</dd>
+    <dt>action <span class="m"><i>a<sub>k</sub></i></span></dt><dd><span class="m"><i>s</i><sub><i>k</i>+1</sub> − <i>s<sub>k</sub></i></span>, the change in state between consecutive frames. No action labels needed.</dd>
+    <dt>frame <span class="m"><i>z<sub>k</sub></i></span></dt><dd><span class="m c-obs"><i>E</i>(<i>x<sub>k</sub></i>)</span>, each frame encoded on its own by the frozen ViT-g → a 16×16×1408 feature map.</dd>
+    <dt>predictor</dt><dd>~300M transformer: 24 layers, 16 heads, width 1024. Linear projections in for actions, states and patches; linear projection out to 1408.</dd>
+  </dl>
+
+  <figure class="fig">
+    <p class="figlead">The predictor reads one flat token sequence. For each time step <i>k</i>: one action token <i>a<sub>k</sub></i>, one state token <i>s<sub>k</sub></i>, then the 256 patch tokens of that frame's feature map <i>z<sub>k</sub></i> (16×16 patches; 3 drawn here, labelled <i>z<sub>k</sub></i>·1, ·2, ·3). The grid is the attention mask: <b>each row is a token</b>, and the blue cells in that row are the tokens it is allowed to attend to.</p>
+    <div class="attn" id="attnGrid" aria-label="Block-causal attention mask"></div>
+    <div class="readout" id="attnStats"></div>
+    <figcaption><b>Tap a row.</b> Block-causal: a token sees every token of its own step and of earlier steps, never a later step. Inside a step there is no ordering, so a patch of frame <i>k</i> already sees <i>a<sub>k</sub></i>. That matters because the output at frame <i>k</i>'s patch tokens is the prediction ẑ<sub><i>k</i>+1</sub>: it has to know which action was taken between frames <i>k</i> and <i>k</i>+1. Patches use 3D-RoPE; action and state tokens get only the temporal rotation.</figcaption>
+  </figure>
+
+  <figure class="fig">
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Loss">
+        <button id="tfBtn" aria-pressed="true">Teacher forcing</button><button id="roBtn" aria-pressed="false">Rollout</button>
+      </div>
+      <button class="btn" id="tfPlay">Play</button>
+    </div>
+    <svg id="tfSvg" class="tf" viewBox="0 0 400 236" role="img" aria-label="Teacher forcing and rollout losses"></svg>
+    <div class="readout" id="tfPhase" style="text-align:center"></div>
+    <figcaption id="tfCap"></figcaption>
+  </figure>
+
+  <div class="eq">
+    <div class="lbl">Teacher forcing (eq. 2), T = 15</div>
+    <div class="row"><span class="m"><i>L</i><sub>tf</sub> = <sup>1</sup>⁄<sub><i>T</i></sub> Σ<sub><i>k</i></sub> ‖ <span class="c-pred"><i>P</i><sub><i>φ</i></sub>((<i>a<sub>t</sub></i>, <i>s<sub>t</sub></i>, <i>E</i>(<i>x<sub>t</sub></i>))<sub><i>t</i>≤<i>k</i></sub>)</span> − <span class="c-goal"><i>E</i>(<i>x</i><sub><i>k</i>+1</sub>)</span> ‖<sub>1</sub></span></div>
+    <p>Predict each next embedding from the true past. All 15 predictions come out of one forward pass (the causal mask makes them independent of the future), then are averaged into one loss.</p>
+    <div class="lbl">Rollout (eq. 3), T = 2</div>
+    <div class="row"><span class="m"><i>L</i><sub>rollout</sub> = ‖ <span class="c-pred"><i>P</i><sub><i>φ</i></sub>(<i>a</i><sub>1:<i>T</i></sub>; <i>s</i><sub>1</sub>, <i>z</i><sub>1</sub>)</span> − <span class="c-goal"><i>z</i><sub><i>T</i>+1</sub></span> ‖<sub>1</sub></span></div>
+    <p>Start from the true first frame, feed the model's own prediction back in, compare only the end point. With T = 2 the gradient goes through one recurrent step. This trains the regime planning uses: rolling forward on its own outputs.</p>
+    <div class="lbl">Total (eq. 4)</div>
+    <div class="row"><span class="m"><i>L</i>(<i>φ</i>) = <i>L</i><sub>tf</sub> + <i>L</i><sub>rollout</sub></span></div>
+    <p>Only the predictor weights <i>φ</i> are trained.</p>
+  </div>
+</section>
+
+<!-- ============ STAGE 3 ============ -->
+<section class="stage" id="s3">
+  <div class="eyebrow"><span class="n">3</span>Test time · no training <span class="chip">I got stuck here</span></div>
+  <h2>Inferring actions by planning</h2>
+  <p class="lede prose">Every weight is frozen. The actions become the variables of an optimization: find the actions whose imagined outcome, in embedding space, is closest to the embedding of a goal image.</p>
+
+  <div class="eq">
+    <div class="lbl">Energy (eq. 5)</div>
+    <div class="row"><span class="m">ℰ(<i>â</i><sub>1:<i>T</i></sub>; <i>z<sub>k</sub></i>, <i>s<sub>k</sub></i>, <i>z<sub>g</sub></i>) = ‖ <span class="c-pred"><i>P</i>(<i>â</i><sub>1:<i>T</i></sub>; <i>s<sub>k</sub></i>, <span class="c-obs"><i>z<sub>k</sub></i></span>)</span> − <span class="c-goal"><i>z<sub>g</sub></i></span> ‖<sub>1</sub></span></div>
+    <div class="row" style="margin-top:6px"><span class="m"><i>a</i><sup>⋆</sup><sub>1:<i>T</i></sub> = argmin<sub><i>â</i></sub> ℰ</span></div>
+    <div class="lbl">In words</div>
+    <p>Encode the current frame and the goal image with the same frozen encoder. For a candidate action sequence, roll the predictor forward <i>T</i> steps from the current state. The energy is the L1 distance between that imagined embedding and the goal embedding. Low energy means "doing this would make the scene look like the goal".</p>
+  </div>
+
+  <h3 class="sub">Minimizing it: the Cross-Entropy Method</h3>
+  <p class="prose">Gradient-free. Keep a Gaussian per action coordinate, sample candidates, score each one by running the predictor, refit the Gaussian to the best few, repeat. Return the final mean.</p>
+  <figure class="fig">
+    <div class="bar">
+      <button class="btn primary" id="cemRun">Run 10 iterations</button>
+      <button class="btn" id="cemStep">Step</button>
+      <button class="btn" id="cemReset">Reset</button>
+    </div>
+    <canvas id="cemCanvas" aria-label="CEM samples on an energy landscape over two action coordinates"></canvas>
+    <div class="readout" id="cemStats"></div>
+    <figcaption>Toy version over 2 of the 7 action coordinates, energy surface shaped like the measured one in paper Fig. 9 (reach task, sweep of Δx, Δy). Darker = lower energy. Each iteration plays in four phases: sample, score, keep the 8 best (rose), refit the Gaussian (ellipse = 1σ). Line: path of the mean. On a smooth 2-D bowl like this one the mean is near the minimum after 2–3 iterations, and the remaining ones mostly shrink σ; the real search covers 7 coordinates per step with 800 samples per iteration. Dashed diamond: the L1 ball of radius 0.075 every action is constrained to (samples outside are rescaled onto it here). The initial N(0, 1) is far wider than the ball, so the first samples all land on its boundary. The measured minimum sits near (0, −0.05) while the true action was (0, −0.10): right direction, displacement underestimated.</figcaption>
+  </figure>
+
+  <div class="stats">
+    <div><b>800</b><span>samples per CEM iteration</span></div>
+    <div><b>10</b><span>CEM iterations per decision</span></div>
+    <div><b>1</b><span>planning horizon T in the robot runs</span></div>
+    <div><b>16 s</b><span>per action on one RTX 4090</span></div>
+  </div>
+
+  <h3 class="sub">Receding horizon: plan, do one step, look again</h3>
+  <figure class="fig">
+    <svg id="loopSvg" class="loop" viewBox="0 0 420 222" role="img" aria-label="Model predictive control loop">
+      <defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--muted)"/></marker>
+      <marker id="ahg" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--goal)"/></marker></defs>
+      <path class="seg-p" d="M276 50 H330 A20 20 0 0 1 350 70 V84" marker-end="url(#ah)"/>
+      <path class="seg-p" d="M350 136 V150 A20 20 0 0 1 330 170 H278" marker-end="url(#ah)"/>
+      <path class="seg-p" d="M124 170 H70 A20 20 0 0 1 50 150 V136" marker-end="url(#ah)"/>
+      <path class="seg-p" d="M50 86 V70 A20 20 0 0 1 70 50 H122" marker-end="url(#ah)"/>
+      <path d="M270 110 H286" style="fill:none;stroke:var(--goal);stroke-width:1.5" marker-end="url(#ahg)"/>
+      <path id="loopPath" d="M70 50 H330 A20 20 0 0 1 350 70 V150 A20 20 0 0 1 330 170 H70 A20 20 0 0 1 50 150 V70 A20 20 0 0 1 70 50 Z" fill="none" stroke="none"/>
+      <circle class="dot" r="5" id="loopDot"><animateMotion dur="6s" repeatCount="indefinite"><mpath href="#loopPath"/></animateMotion></circle>
+      <rect class="box" x="125" y="28" width="150" height="44" rx="7"/>
+      <text x="200" y="47" text-anchor="middle">Observe frame <tspan font-style="italic">xₖ</tspan></text>
+      <text x="200" y="63" text-anchor="middle" class="tt">ENCODE → zₖ, READ sₖ</text>
+      <rect class="box p" x="288" y="86" width="128" height="48" rx="7"/>
+      <text x="352" y="106" text-anchor="middle">CEM on energy</text>
+      <text x="352" y="123" text-anchor="middle" class="tt">→ â<tspan font-size="8" dy="3">1</tspan><tspan dy="-3"> … â</tspan><tspan font-size="8" dy="3">T</tspan></text>
+      <rect class="box" x="125" y="148" width="150" height="44" rx="7"/>
+      <text x="200" y="167" text-anchor="middle">Execute only â₁</text>
+      <text x="200" y="183" text-anchor="middle" class="tt">DISCARD THE REST</text>
+      <rect class="box" x="4" y="88" width="92" height="44" rx="7"/>
+      <text x="50" y="107" text-anchor="middle">Arm moves</text>
+      <text x="50" y="123" text-anchor="middle" class="tt">REAL WORLD</text>
+      <rect class="box g" x="130" y="92" width="140" height="36" rx="7"/>
+      <text x="200" y="115" text-anchor="middle">Goal image → <tspan font-style="italic">z</tspan><tspan font-size="9" dy="3" font-style="italic">g</tspan></text>
+      <text x="200" y="212" text-anchor="middle" class="tt">EACH TURN OF THE LOOP = ONE ROBOT ACTION</text>
+    </svg>
+    <figcaption>Model predictive control. Because each plan starts from a freshly observed frame, the model's errors don't accumulate across steps. The goal is encoded once. Control is blocking: the next frame is taken after the commanded move finishes.</figcaption>
+  </figure>
+
+  <details>
+    <summary><span class="q">Q</span>Did they try sampling a whole trajectory and executing it without re-planning?</summary>
+    <div class="body">Not in the main text: every robot result uses closed-loop MPC. With horizon 1, a planning call yields a single action, so open-loop execution would first require long-horizon planning, which the paper flags as hard: autoregressive errors grow with rollout length, and the search space grows exponentially with the horizon. Re-planning from a real observation each step is what makes a short-horizon, imperfect model usable. The appendices weren't checked for such an ablation.</div>
+  </details>
+
+  <h3 class="sub">Sub-goals for pick-and-place</h3>
+  <p class="prose">Grasp and reach-with-object use one goal image. Pick-and-place is too long for greedy planning, so three goal images are given in sequence, each pursued for a fixed number of steps.</p>
+  <div class="sgs" aria-label="Sub-goal schedule">
+    <div class="grp" style="flex:4"><div class="cells"><i></i><i></i><i></i><i></i></div><small><b>Goal 1 · 4 steps</b>object grasped</small></div>
+    <div class="grp" style="flex:10"><div class="cells"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><small><b>Goal 2 · 10 steps</b>object near the target</small></div>
+    <div class="grp" style="flex:4"><div class="cells"><i></i><i></i><i></i><i></i></div><small><b>Goal 3 · 4 steps</b>object placed</small></div>
+  </div>
+</section>
+
+<!-- ============ RESULTS ============ -->
+<section class="stage" id="results">
+  <div class="eyebrow">Results</div>
+  <h2>Zero-shot on Franka arms in two new labs</h2>
+  <p class="prose">Neither lab appears in Droid. Uncalibrated monocular RGB camera, no data collected in these environments, no task-specific training or reward.</p>
+
+  <figure class="fig">
+    <div class="legend" style="margin:0 0 12px">
+      <span><i class="sw" style="background:var(--obs)"></i>V-JEPA 2-AC</span>
+      <span><i class="sw" style="background:var(--muted);opacity:.55"></i>Octo (VLA, behavior cloning)</span>
+    </div>
+    <div class="rb" id="robotBars"></div>
+    <figcaption>Success rate (%), average of two labs, 10 trials each. Octo baseline: fine-tuned on all of Droid with behavior cloning and hindsight goal-image relabeling. Paper Table 2.</figcaption>
+  </figure>
+
+  <figure class="fig">
+    <div class="tw"><table>
+      <thead><tr><th>Lab 2, CEM planner</th><th class="n">Samples</th><th class="n">Time / action</th><th class="n">Reach</th><th class="n">Grasp cup</th><th class="n">Grasp box</th><th class="n">P&amp;P cup</th><th class="n">P&amp;P box</th></tr></thead>
+      <tbody>
+        <tr><td>Cosmos (pixel-space video diffusion)</td><td class="n">80</td><td class="n">4 min</td><td class="n">80</td><td class="n">0</td><td class="n">20</td><td class="n">0</td><td class="n">0</td></tr>
+        <tr class="hl"><td>V-JEPA 2-AC</td><td class="n">800</td><td class="n">16 s</td><td class="n">100</td><td class="n">60</td><td class="n">20</td><td class="n">80</td><td class="n">50</td></tr>
+      </tbody>
+    </table></div>
+    <figcaption>Same planner, same energy (goal frame encoded in each model's latent space), 10 iterations, horizon 1, one RTX 4090. Ten times more samples and still 15× faster per action, because there is no pixel generation. A full pick-and-place with Cosmos takes over an hour. Paper Table 3.</figcaption>
+  </figure>
+
+  <h3 class="sub">The frozen encoder elsewhere</h3>
+  <div class="other">
+    <div><span class="k">Understanding</span><b>77.3</b><p>SSv2 top-1 with an attentive probe (ViT-g, 384²). Best 6-task average (88.2). Strong on motion; on appearance it trails image-text encoders slightly (ImageNet 85.1 vs 88.0 for SigLIP2).</p></div>
+    <div><span class="k">Anticipation</span><b>39.7</b><p>EPIC-Kitchens-100 action recall@5, 1 s ahead: +44% relative over the previous best (PlausiVL, 8B). The pretraining predictor fills in the future frame via mask tokens; a probe reads encoder + predictor outputs.</p></div>
+    <div><span class="k">Video QA</span><b>84.0</b><p>PerceptionTest with Llama 3.1 8B. State of the art at 8B on MVP, TempCompass, TemporalBench, TOMATO. With a frozen encoder it beats DINOv2, SigLIP2 and PE, so no language supervision is needed in the encoder.</p></div>
+  </div>
+</section>
+
+<!-- ============ LIMITS ============ -->
+<section class="stage" id="limits">
+  <div class="eyebrow">Limitations</div>
+  <h2>Where it breaks</h2>
+  <ul class="lim prose">
+    <li><b>Camera position.</b> Actions are in the robot-base frame, but the model must infer those axes from one uncalibrated view, often without the base visible. They tried several camera placements by hand before picking one.</li>
+    <li><b>Long horizons.</b> Rollout error grows with each autoregressive step and the action search space grows exponentially with the horizon. Hence horizon 1 and hand-given sub-goals.</li>
+    <li><b>Image goals only.</b> A goal must be a picture of the end state. Language goals, possibly via the LLM-aligned encoder, are left to future work.</li>
+    <li><b>Precision.</b> Grasping the box succeeds 25% of the time on average; small action errors miss the cup rim or leave the gripper too narrow.</li>
+  </ul>
+</section>
+
+<footer>Written October 2026 from arXiv v1 (11 June 2025). Mask hyperparameters come from V-JEPA 1 (Bardes et al., 2024), which V-JEPA 2 reuses. Toy figures are illustrations; numbers in tables and charts are the paper's.</footer>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function rgb(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+const redraws=[];
+const fireAll=()=>redraws.forEach(f=>f());
+try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fireAll);}catch(e){}
+new MutationObserver(fireAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+function makeCanvas(cv,heightFn,draw){
+  const o={ctx:cv.getContext('2d'),w:0,h:0,draw:()=>draw(o)};
+  function size(){
+    const w=Math.floor(cv.parentElement.clientWidth); if(!w) return;
+    if(w===o.w) return;
+    const h=Math.round(heightFn(w)); const d=window.devicePixelRatio||1;
+    cv.width=Math.round(w*d); cv.height=Math.round(h*d); cv.style.height=h+'px';
+    o.ctx.setTransform(d,0,0,d,0,0); o.w=w; o.h=h; o.draw();
+  }
+  new ResizeObserver(size).observe(cv.parentElement);
+  redraws.push(()=>o.draw());
+  size();
+  return o;
+}
+
+/* ---------- nav highlight ---------- */
+const links=[...document.querySelectorAll('nav.index a')];
+const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+function navUpdate(){let cur=0;secs.forEach((s,i)=>{if(s&&s.getBoundingClientRect().top<120)cur=i;});links.forEach((a,i)=>a.classList.toggle('on',i===cur));}
+window.addEventListener('scroll',navUpdate,{passive:true});navUpdate();
+
+/* ---------- masking ---------- */
+(function(){
+  const T=8,H=8,W=8,FULL=2048;
+  const KINDS=[{key:'short',title:'Mask A · short-range',sub:'union of 8 blocks, each 15% of the frame',n:8,scale:.15},{key:'long',title:'Mask B · long-range',sub:'union of 2 blocks, each 70% of the frame',n:2,scale:.7}];
+  let type='tube',masks=null,prev=null,fade=1,anim=null;
+  function blocks(n,scale){
+    const m=new Uint8Array(H*W);
+    for(let b=0;b<n;b++){
+      const area=scale*H*W;
+      const ar=Math.exp(Math.log(.75)+Math.random()*(Math.log(1.5)-Math.log(.75)));
+      const h=Math.max(1,Math.min(H,Math.round(Math.sqrt(area*ar))));
+      const w=Math.max(1,Math.min(W,Math.round(Math.sqrt(area/ar))));
+      const top=Math.floor(Math.random()*(H-h+1)),left=Math.floor(Math.random()*(W-w+1));
+      for(let i=0;i<h;i++)for(let j=0;j<w;j++)m[(top+i)*W+left+j]=1;
+    }
+    return m;
+  }
+  function expand(sp){
+    const full=new Uint8Array(T*H*W);const cnt=sp.reduce((a,b)=>a+b,0);
+    for(let t=0;t<T;t++){
+      if(type==='tube'){for(let p=0;p<H*W;p++)full[t*H*W+p]=sp[p];}
+      else{const idx=[...Array(H*W).keys()];for(let i=idx.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}for(let i=0;i<cnt;i++)full[t*H*W+idx[i]]=1;}
+    }
+    return full;
+  }
+  const build=()=>KINDS.map(k=>expand(blocks(k.n,k.scale)));
+  function leak(m,t,p){if(!m[t*H*W+p])return false;return (t>0&&!m[(t-1)*H*W+p])||(t<T-1&&!m[(t+1)*H*W+p]);}
+  function layout(w){const cols=w>=560?8:4;const gap=w>=560?10:12;const fw=Math.min(84,(w-(cols-1)*gap)/cols);const rows=T/cols;const strip=36+rows*(fw+20)+(rows-1)*10;return{cols,gap,fw,rows,strip,h:2*strip+18};}
+  const C=makeCanvas($('#maskCanvas'),w=>layout(w).h,o=>{
+    const {ctx,w,h}=o; if(!masks)return; ctx.clearRect(0,0,w,h);
+    const L=layout(w); const total=L.cols*L.fw+(L.cols-1)*L.gap; const x0=(w-total)/2;
+    const cObs=css('--obs'),cSoft=css('--soft'),cInk=css('--ink'),cMut=css('--muted'),cLine=css('--line');
+    const s=L.fw/W;
+    KINDS.forEach((K,mi)=>{
+      const sy=mi*(L.strip+18);const mask=masks[mi],pm=prev&&prev[mi];
+      ctx.globalAlpha=1;ctx.textAlign='left';
+      ctx.fillStyle=cInk;ctx.font='600 12.5px "IBM Plex Sans", sans-serif';ctx.fillText(K.title,x0,sy+13);
+      ctx.fillStyle=cMut;ctx.font='11.5px "IBM Plex Sans", sans-serif';ctx.fillText(K.sub,x0,sy+28);
+      for(let t=0;t<T;t++){
+        const col=t%L.cols,row=Math.floor(t/L.cols);
+        const fx=x0+col*(L.fw+L.gap),fy=sy+36+row*(L.fw+30);
+        for(let p=0;p<H*W;p++){
+          const cx=fx+(p%W)*s,cy=fy+Math.floor(p/W)*s;
+          const draw=(m,a)=>{ctx.globalAlpha=a;ctx.fillStyle=m[t*H*W+p]?cSoft:cObs;ctx.fillRect(cx+.5,cy+.5,s-1,s-1);};
+          if(pm&&fade<1)draw(pm,1);
+          draw(mask,fade);
+          ctx.globalAlpha=fade;
+          if(type==='random'&&leak(mask,t,p)){ctx.fillStyle=cInk;ctx.beginPath();ctx.arc(cx+s/2,cy+s/2,Math.max(1.3,s*.16),0,7);ctx.fill();}
+          ctx.globalAlpha=1;
+        }
+        ctx.strokeStyle=cLine;ctx.lineWidth=1;ctx.strokeRect(fx+.5,fy+.5,L.fw-1,L.fw-1);
+        ctx.fillStyle=cMut;ctx.font='10.5px "IBM Plex Mono", monospace';ctx.textAlign='center';
+        ctx.fillText((L.cols===8?'frames ':'f ')+(2*t+1)+'–'+(2*t+2),fx+L.fw/2,fy+L.fw+14);
+      }
+    });
+  });
+  function stats(){
+    const parts=masks.map((mask,mi)=>{
+      let m=0,lk=0;for(let t=0;t<T;t++)for(let p=0;p<H*W;p++){if(mask[t*H*W+p]){m++;if(leak(mask,t,p))lk++;}}
+      let s=`${KINDS[mi].key}-range: ${Math.round(m/(T*H*W)*100)}% masked`;
+      if(type==='random')s+=`, ${Math.round(lk/m*100)}% of them leak`;
+      return s;
+    });
+    $('#maskStats').textContent=parts.join(' · ');
+  }
+  function regen(){
+    prev=masks;masks=build();stats();
+    if(reduce||!prev){fade=1;C.draw();return;}
+    cancelAnimationFrame(anim);const t0=performance.now();
+    const tick=now=>{fade=Math.min(1,(now-t0)/260);C.draw();if(fade<1)anim=requestAnimationFrame(tick);};
+    fade=0;anim=requestAnimationFrame(tick);
+  }
+  $('#mNew').onclick=regen;
+  masks=build();stats();C.draw();
+})();
+
+/* ---------- architecture diagram ---------- */
+(function(){
+  const svg=$('#archSvg');
+  const box=(x,y,w,h,t1,t2,kind)=>{
+    const st={obs:'fill:var(--obs-t);stroke:var(--obs)',pred:'fill:var(--pred-t);stroke:var(--pred)',goal:'fill:var(--goal-t);stroke:var(--goal)',net:'fill:var(--surface);stroke:var(--ink)',netd:'fill:var(--surface);stroke:var(--muted);stroke-dasharray:4 3'}[kind];
+    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" style="${st};stroke-width:1.4"/>
+      <text x="${x+w/2}" y="${y+h/2-(t2?3:-5)}" text-anchor="middle" style="font:500 14px var(--f-body);fill:var(--ink)">${t1}</text>
+      ${t2?`<text x="${x+w/2}" y="${y+h/2+14}" text-anchor="middle" style="font:400 11px var(--f-mono);fill:var(--muted)">${t2}</text>`:''}`;
+  };
+  const ar=(d,c='var(--muted)')=>`<path d="${d}" style="fill:none;stroke:${c};stroke-width:1.5" marker-end="url(#aa)"/>`;
+  const defs=`<defs><marker id="aa" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--muted)"/></marker></defs>`;
+  const lab=(x,y,t,anchor='start')=>`<text x="${x}" y="${y}" text-anchor="${anchor}" style="font:500 10.5px var(--f-mono);fill:var(--muted);letter-spacing:.06em">${t}</text>`;
+  function narrow(){
+    svg.setAttribute('viewBox','0 0 340 352');
+    svg.innerHTML=`${defs}
+    ${lab(0,14,'TRAINED')}${lab(340,14,'NO GRADIENT','end')}
+    ${box(0,24,150,56,'masked clip x','~10% of tokens','obs')}
+    ${box(190,24,150,56,'full clip y','all tokens','obs')}
+    ${ar('M75 82 V108')}${ar('M265 82 V108')}
+    ${box(0,110,150,56,'encoder E<tspan dy="4" font-size="10">θ</tspan>','ViT-g · 1B','net')}
+    ${box(190,110,150,56,'EMA encoder','weights θ̄','netd')}
+    <path d="M152 150 H186" style="fill:none;stroke:var(--muted);stroke-width:1.3;stroke-dasharray:3 3" marker-end="url(#aa)"/>
+    <text x="170" y="142" text-anchor="middle" style="font:400 10px var(--f-mono);fill:var(--muted)">EMA</text>
+    ${ar('M75 168 V194')}
+    ${box(0,196,150,56,'predictor P<tspan dy="4" font-size="10">φ</tspan>','+ mask tokens Δy','net')}
+    ${ar('M265 168 V280')}
+    <text x="258" y="222" text-anchor="end" style="font:400 10.5px var(--f-mono);fill:var(--muted)">stop-grad,</text>
+    <text x="258" y="236" text-anchor="end" style="font:400 10.5px var(--f-mono);fill:var(--muted)">keep masked</text>
+    ${ar('M75 254 V280')}
+    ${box(0,282,150,56,'predicted features','masked positions','pred')}
+    ${box(190,282,150,56,'target features','masked positions','goal')}
+    <path d="M152 310 H188" style="fill:none;stroke:var(--goal);stroke-width:1.8;stroke-dasharray:4 3"/>
+    <rect x="153" y="298" width="34" height="24" rx="12" style="fill:var(--surface);stroke:var(--goal);stroke-width:1.4"/>
+    <text x="170" y="314" text-anchor="middle" style="font:500 11px var(--f-mono);fill:var(--ink)">L1</text>`;
+  }
+  let lastWide=null;
+  function render(){const wide=svg.parentElement.clientWidth>=540;if(wide===lastWide)return;lastWide=wide;wide?wideR():narrow();}
+  new ResizeObserver(render).observe(svg.parentElement);
+  function wideR(){
+  svg.setAttribute('viewBox','0 0 640 250');
+  svg.innerHTML=`<defs><marker id="aa" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--muted)"/></marker></defs>
+  <text x="0" y="16" style="font:500 10.5px var(--f-mono);fill:var(--muted);letter-spacing:.06em">TRAINED BY BACKPROP</text>
+  ${box(0,30,120,56,'masked clip x','~10% of tokens','obs')}
+  ${ar('M122 58 H150')}
+  ${box(152,30,118,56,'encoder E<tspan dy="4" font-size="10">θ</tspan>','ViT-g · 1B','net')}
+  ${ar('M272 58 H300')}
+  ${box(302,30,150,56,'predictor P<tspan dy="4" font-size="10">φ</tspan>','+ mask tokens Δy','net')}
+  ${ar('M454 58 H482')}
+  ${box(484,30,156,56,'predicted features','masked positions','pred')}
+  <text x="0" y="148" style="font:500 10.5px var(--f-mono);fill:var(--muted);letter-spacing:.06em">NO GRADIENT</text>
+  ${box(0,162,120,56,'full clip y','all tokens','obs')}
+  ${ar('M122 190 H150')}
+  ${box(152,162,118,56,'EMA encoder','weights θ̄','netd')}
+  ${ar('M272 190 H482')}
+  <text x="377" y="182" text-anchor="middle" style="font:400 11px var(--f-mono);fill:var(--muted)">stop-grad, keep masked</text>
+  ${box(484,162,156,56,'target features','masked positions','goal')}
+  <path d="M211 88 V160" style="fill:none;stroke:var(--muted);stroke-width:1.3;stroke-dasharray:3 3" marker-end="url(#aa)"/>
+  <text x="219" y="128" style="font:400 11px var(--f-mono);fill:var(--muted)">θ̄ ← EMA(θ)</text>
+  <path d="M562 88 V160" style="fill:none;stroke:var(--goal);stroke-width:1.8;stroke-dasharray:4 3"/>
+  <rect x="534" y="111" width="56" height="26" rx="13" style="fill:var(--surface);stroke:var(--goal);stroke-width:1.4"/>
+  <text x="562" y="128" text-anchor="middle" style="font:500 12px var(--f-mono);fill:var(--ink)">L1</text>`;
+  }
+  render();
+})();
+
+/* ---------- scaling chart ---------- */
+(function(){
+  const rows=[['V-JEPA 1 recipe (ViT-L)',84.2],['+ data: 2M → 22M videos',85.2],['+ model: ViT-L → ViT-g',86.7],['+ training: 90K → 252K it',87.5],['+ resolution: 256→384, 16→64 fr',88.2]];
+  const lo=83.6,hi=88.6,pct=v=>((v-lo)/(hi-lo)*100).toFixed(2)+'%';
+  let h='';
+  rows.forEach((r,i)=>{
+    const prevV=i?rows[i-1][1]:r[1];
+    const inc=i?`<span class="inc" style="left:${pct((prevV+r[1])/2)}">+${(r[1]-prevV).toFixed(1)}</span>`:'';
+    const segm=i?`<span class="seg-i" style="left:${pct(prevV)};width:calc(${pct(r[1])} - ${pct(prevV)})"></span>`:'';
+    h+=`<div class="r" title="${r[0]}: ${r[1]}"><span>${r[0]}</span><span class="tr">${segm}${inc}<span class="d" style="left:${pct(r[1])}"></span></span><span class="v">${r[1].toFixed(1)}</span></div>`;
+  });
+  h+=`<div class="ax"><span></span><span class="tk">${[84,86,88].map(t=>`<span style="left:${pct(t)}">${t}</span>`).join('')}</span><span></span></div>`;
+  $('#scaleChart').innerHTML=h;
+})();
+
+/* ---------- data mix table ---------- */
+(function(){
+  const d=[['Something-Something v2','ego video','168',.056],['Kinetics 400/600/700','exo video','614',.188],['HowTo100M','exo video','134K',.318],['YT-Temporal-1B, curated','exo video','1.6M',.188],['ImageNet','images','–',.25]];
+  $('#mixRows').innerHTML=d.map(r=>`<tr><td>${r[0]}<small style="display:block;color:var(--muted);font-size:.74rem">${r[1]}</small></td><td class="n">${r[2]}</td><td><span class="wbar" style="width:${Math.round(r[3]*200)}px"></span><span class="mono">${r[3].toFixed(3)}</span></td></tr>`).join('');
+})();
+
+/* ---------- attention grid ---------- */
+(function(){
+  const g=$('#attnGrid');const steps=4,per=['a','s','z','z','z'];const sub=['₁','₂','₃','₄'];
+  const toks=[];for(let k=0;k<steps;k++)per.forEach((t,i)=>toks.push({k,t,first:i===0,pi:i-1}));
+  const N=toks.length;
+  g.style.gridTemplateColumns=`3rem repeat(${N},minmax(0,1fr))`;
+  let html='<span></span>';
+  for(let k=0;k<steps;k++)html+=`<span class="stp" style="grid-column:span ${per.length}">step ${k+1}</span>`;
+  html+='<span></span>';
+  toks.forEach(t=>{html+=`<span class="h">${t.t}</span>`;});
+  toks.forEach((tr,r)=>{
+    html+=`<span class="rl" data-r="${r}">${tr.t}${sub[tr.k]}${tr.t==='z'?'·'+tr.pi:''}</span>`;
+    toks.forEach(tc=>{html+=`<span class="c${tc.k<=tr.k?' ok':''}" data-r="${r}"></span>`;});
+  });
+  g.innerHTML=html;
+  const names={a:'action',s:'state',z:'patch'};
+  function sel(r){
+    g.querySelectorAll('[data-r]').forEach(el=>el.classList.toggle('s',+el.dataset.r===r));
+    const t=toks[r];const n=toks.filter(x=>x.k<=t.k).length;
+    const K=t.k+1,rng=K===1?'₁':'₁–'+sub[t.k];$('#attnStats').textContent=`row ${t.t}${sub[t.k]}${t.t==='z'?'·'+t.pi:''} (${names[t.t]} token, step ${K}) attends to a${rng}, s${rng} and all patches of frames 1–${K}`+(K<4?` · nothing from step ${K+1} on`:'');
+  }
+  g.addEventListener('click',e=>{const el=e.target.closest('[data-r]');if(el)sel(+el.dataset.r);});
+  sel(12);
+})();
+
+/* ---------- teacher forcing vs rollout ---------- */
+(function(){
+  const svg=$('#tfSvg');const X=[70,160,250,340],YT=62,YB=168;let mode='tf',timer=null;
+  const caps={
+    tf:'<b>Teacher forcing.</b> One forward pass over the whole clip, as in next-token prediction for an LLM. Because of the block-causal mask, the output at frame <i>k</i> only depends on steps ≤ <i>k</i>, so every ẑ<sub><i>k</i>+1</sub> is produced in parallel. Then all of them are compared with the real next embeddings (amber rings) at once.',
+    ro:'<b>Rollout, T = 2.</b> Here the passes are sequential: predict ẑ₂ from the real z₁, then feed ẑ₂ back in as input to predict ẑ₃. Only ẑ₃ is compared with the real z₃; the real z₂ is never used as input.'
+  };
+  const sb=['','₁','₂','₃','₄'];
+  const node=(x,y,lab,cls,s,extra='')=>`<g class="nd ${cls} ${extra}" ${s!=null?`data-s="${s}"`:''}><circle cx="${x}" cy="${y}" r="19"/><text x="${x}" y="${y+6}" text-anchor="middle">${lab}</text></g>`;
+  const ring=(x,y,s)=>`<circle class="ring" cx="${x}" cy="${y}" r="24" data-s="${s}"/>`;
+  const l1=(x,s)=>`<g data-s="${s}"><line class="l1" x1="${x}" y1="${YT+21}" x2="${x}" y2="${YB-26}"/><rect x="${x-14}" y="${(YT+YB)/2-9}" width="28" height="18" rx="9" style="fill:var(--surface);stroke:var(--goal)"/><text class="t-l1" x="${x}" y="${(YT+YB)/2+4}" text-anchor="middle">L1</text></g>`;
+  function arrowD(x1,y1,x2,y2){return `M${x1} ${y1} L${x2} ${y2}`;}
+  function render(){
+    let h=`<defs><marker id="tfa" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--muted)"/></marker><marker id="tfp" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" style="fill:var(--pred)"/></marker></defs>`;
+    h+=`<text class="t-sm" x="${X[0]-19}" y="20">predictor outputs ẑ</text><text class="t-sm" x="${X[0]-19}" y="226">real frames, encoded: z = E(x)</text>`;
+    if(mode==='tf'){
+      for(let k=1;k<=4;k++){h+=node(X[k-1],YB,'z'+sb[k],'obs',null);}
+      for(let k=1;k<=3;k++){
+        const s1=1,s2=2;
+        h+=`<g data-s="${s1}"><path class="ar" d="${arrowD(X[k-1]+15,YB-15,X[k]-15,YT+15)}" marker-end="url(#tfa)"/><text class="t-act" text-anchor="end" x="${(X[k-1]+X[k])/2-6}" y="${(YT+YB)/2-6}">a${sb[k]}</text></g>`;
+        h+=node(X[k],YT,'ẑ'+sb[k+1],'pred',s1);
+        h+=ring(X[k],YB,s2)+l1(X[k],s2);
+      }
+    }else{
+      h+=node(X[0],YB,'z₁','obs',null);
+      h+=node(X[1],YB,'z₂','obs',null,'dim');
+      h+=node(X[2],YB,'z₃','obs',null);
+      h+=node(X[3],YB,'z₄','obs',null,'dim');
+      h+=`<g data-s="1"><path class="ar" d="${arrowD(X[0]+15,YB-15,X[1]-15,YT+15)}" marker-end="url(#tfa)"/><text class="t-act" text-anchor="end" x="${(X[0]+X[1])/2-6}" y="${(YT+YB)/2-6}">a₁</text></g>`;
+      h+=node(X[1],YT,'ẑ₂','pred',1);
+      h+=`<g data-s="2"><path class="ar p" d="M${X[1]+21} ${YT} H${X[2]-22}" marker-end="url(#tfp)"/><text class="t-act" x="${(X[1]+X[2])/2-6}" y="${YT-10}">a₂</text></g>`;
+      h+=node(X[2],YT,'ẑ₃','pred',2);
+      h+=ring(X[2],YB,3)+l1(X[2],3);
+    }
+    svg.innerHTML=h;$('#tfCap').innerHTML=caps[mode];
+  }
+  const phases={tf:['forward pass: ẑ₂, ẑ₃, ẑ₄ all computed at once','loss: every prediction vs its real next embedding, averaged'],ro:['pass 1: real z₁ and a₁ → ẑ₂','pass 2: ẑ₂ fed back with a₂ → ẑ₃','loss: final prediction ẑ₃ vs real z₃ only']};
+  function show(cur){svg.querySelectorAll('[data-s]').forEach(el=>el.classList.toggle('off',+el.dataset.s>cur));$('#tfPhase').textContent=cur>=1&&cur<99?phases[mode][cur-1]||'':'';}
+  function play(){
+    clearInterval(timer);const max=mode==='tf'?2:3;
+    if(reduce){show(99);return;}
+    let cur=0;show(cur);
+    timer=setInterval(()=>{cur++;show(cur);if(cur>=max){clearInterval(timer);}},1300);
+  }
+  function setMode(m){mode=m;$('#tfBtn').setAttribute('aria-pressed',m==='tf');$('#roBtn').setAttribute('aria-pressed',m==='ro');clearInterval(timer);render();$('#tfPhase').textContent='';}
+  $('#tfBtn').onclick=()=>setMode('tf');$('#roBtn').onclick=()=>setMode('ro');$('#tfPlay').onclick=play;
+  render();
+})();
+
+/* ---------- CEM ---------- */
+(function(){
+  const N=60,K=8,ITERS=10,R=.075,D=.12;
+  // state: mu/sd = current Gaussian; samples/elites of the iteration being shown; phase 0 none,1 sampled,2 scored,3 selected,4 refitted
+  let mu,sd,iter,samples,elites,path,phase=0,drawMu,drawSd,heat=null,heatKey='',busy=false,cancel=0;
+  const E=(x,y)=>.41+3*(1.25*x*x+(y+.05)*(y+.05))+.0012*Math.sin(70*x+1)*Math.cos(55*y);
+  const randn=()=>{let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+  const proj=p=>{const l=Math.abs(p[0])+Math.abs(p[1]);return l>R?[p[0]*R/l,p[1]*R/l]:p;};
+  function geom(w,h){const ml=42,mr=14,mt=10,mb=36;const S=Math.min(w-ml-mr,h-mt-mb);const x0=ml+Math.max(0,(w-ml-mr-S)/2);return{S,x0,y0:mt};}
+  function makeHeat(){
+    const key=css('--surface')+css('--ink');if(heat&&heatKey===key)return heat;
+    const n=90,c=document.createElement('canvas');c.width=n;c.height=n;const cx=c.getContext('2d');const img=cx.createImageData(n,n);
+    const a=rgb(css('--surface')),b=rgb(css('--ink'));let vals=[],mn=1e9,mx=-1e9;
+    for(let j=0;j<n;j++)for(let i=0;i<n;i++){const x=-D+(i+.5)/n*2*D,y=D-(j+.5)/n*2*D;const e=E(x,y);vals.push(e);mn=Math.min(mn,e);mx=Math.max(mx,e);}
+    vals.forEach((e,k)=>{const t=1-(e-mn)/(mx-mn);const s=.03+.34*Math.pow(t,1.6);for(let q=0;q<3;q++)img.data[k*4+q]=Math.round(a[q]+(b[q]-a[q])*s);img.data[k*4+3]=255;});
+    cx.putImageData(img,0,0);heat=c;heatKey=key;return c;
+  }
+  const C=makeCanvas($('#cemCanvas'),w=>Math.min(w,470),o=>{
+    const {ctx,w,h}=o;ctx.clearRect(0,0,w,h);if(!mu)return;
+    const g=geom(w,h),S=g.S;const px=x=>g.x0+(x+D)/(2*D)*S,py=y=>g.y0+(D-y)/(2*D)*S;
+    const ink=css('--ink'),mut=css('--muted'),pred=css('--pred'),goal=css('--goal'),surf=css('--surface'),line=css('--line');
+    ctx.imageSmoothingEnabled=true;ctx.drawImage(makeHeat(),g.x0,g.y0,S,S);
+    ctx.strokeStyle=line;ctx.lineWidth=1;ctx.strokeRect(g.x0+.5,g.y0+.5,S-1,S-1);
+    ctx.fillStyle=mut;ctx.font='10.5px "IBM Plex Mono", monospace';
+    [-.1,0,.1].forEach(t=>{ctx.textAlign='center';ctx.fillText(t===0?'0':t.toFixed(1),px(t),g.y0+S+14);ctx.textAlign='right';ctx.fillText(t===0?'0':t.toFixed(1),g.x0-6,py(t)+3.5);});
+    ctx.textAlign='center';ctx.fillText('Δx',g.x0+S/2,g.y0+S+30);ctx.save();ctx.translate(g.x0-32,g.y0+S/2);ctx.rotate(-Math.PI/2);ctx.fillText('Δy',0,0);ctx.restore();
+    ctx.setLineDash([4,4]);ctx.strokeStyle=mut;ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(px(R),py(0));ctx.lineTo(px(0),py(R));ctx.lineTo(px(-R),py(0));ctx.lineTo(px(0),py(-R));ctx.closePath();ctx.stroke();ctx.setLineDash([]);
+    ctx.save();ctx.beginPath();ctx.rect(g.x0,g.y0,S,S);ctx.clip();
+    // Gaussian being sampled from (1 sigma), drawn when it fits on the plot
+    if(drawSd[0]<.2){ctx.strokeStyle=ink;ctx.globalAlpha=.6;ctx.lineWidth=1.3;ctx.beginPath();ctx.ellipse(px(drawMu[0]),py(drawMu[1]),Math.max(1.5,drawSd[0]/(2*D)*S),Math.max(1.5,drawSd[1]/(2*D)*S),0,0,7);ctx.stroke();ctx.globalAlpha=1;}
+    if(phase>=1){
+      let emin=1e9,emax=-1e9;samples.forEach(s=>{emin=Math.min(emin,s.e);emax=Math.max(emax,s.e);});
+      samples.forEach(s=>{
+        const isE=elites.includes(s);
+        if(phase>=3&&isE)return;
+        let col=mut,a=.55,r=2.8;
+        if(phase===2){const t=1-(s.e-emin)/Math.max(1e-9,emax-emin);col=pred;a=.15+.8*t*t;r=3.2;}
+        if(phase>=3){a=.25;}
+        ctx.fillStyle=col;ctx.globalAlpha=a;ctx.beginPath();ctx.arc(px(s[0]),py(s[1]),r,0,7);ctx.fill();
+      });ctx.globalAlpha=1;
+      if(phase>=3)elites.forEach(s=>{ctx.fillStyle=surf;ctx.beginPath();ctx.arc(px(s[0]),py(s[1]),5.6,0,7);ctx.fill();ctx.fillStyle=pred;ctx.beginPath();ctx.arc(px(s[0]),py(s[1]),4.1,0,7);ctx.fill();});
+    }
+    ctx.restore();
+    const mx=px(0),my=py(-.05);ctx.strokeStyle=goal;ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(mx-6,my-6);ctx.lineTo(mx+6,my+6);ctx.moveTo(mx+6,my-6);ctx.lineTo(mx-6,my+6);ctx.stroke();
+    ctx.strokeStyle=goal;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(mx+9,my);ctx.lineTo(mx+52,my);ctx.stroke();
+    ctx.fillStyle=ink;ctx.textAlign='left';ctx.font='11px "IBM Plex Sans", sans-serif';ctx.fillText('energy minimum',mx+56,my+4);
+    const gx=px(0),gy=py(-.1);ctx.strokeStyle=ink;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(gx,gy,5,0,7);ctx.stroke();ctx.fillStyle=ink;ctx.fillText('true action',gx+10,gy+4);
+    if(path.length>1){ctx.strokeStyle=ink;ctx.lineWidth=1.4;ctx.beginPath();path.forEach((p,i)=>{i?ctx.lineTo(px(p[0]),py(p[1])):ctx.moveTo(px(p[0]),py(p[1]));});ctx.stroke();}
+    ctx.fillStyle=surf;ctx.beginPath();ctx.arc(px(drawMu[0]),py(drawMu[1]),6,0,7);ctx.fill();ctx.fillStyle=ink;ctx.beginPath();ctx.arc(px(drawMu[0]),py(drawMu[1]),4.2,0,7);ctx.fill();
+  });
+  const PH=['','1 · sample 60 action candidates from the Gaussian (and keep them inside the L1 ball)','2 · score each one: run the predictor, take the L1 distance to the goal embedding (stronger rose = lower energy)','3 · keep the 8 lowest-energy candidates','4 · refit the Gaussian to them: new mean and σ'];
+  function readout(){
+    const f=v=>v.toFixed(3);
+    const head= iter===0&&phase===0 ? 'iteration 0 · prior N(0, 1) on each coordinate' : `iteration ${iter}/${ITERS} · mean (${f(mu[0])}, ${f(mu[1])}) · σ (${f(sd[0])}, ${f(sd[1])})`;
+    $('#cemStats').innerHTML=head+(phase>0&&phase<4?`<br><span style="color:var(--pred)">${PH[phase]}</span>`:'');
+  }
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  const tween=(a0,a1,b0,b1,ms,tok)=>new Promise(res=>{const t0=performance.now();const f=now=>{if(tok!==cancel)return res();const t=Math.min(1,(now-t0)/ms),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;drawMu=[0,1].map(i=>a0[i]+(a1[i]-a0[i])*e);drawSd=[0,1].map(i=>b0[i]+(b1[i]-b0[i])*e);C.draw();t<1?requestAnimationFrame(f):res();};requestAnimationFrame(f);});
+  function compute(){
+    samples=[];for(let i=0;i<N;i++){const p=proj([mu[0]+sd[0]*randn(),mu[1]+sd[1]*randn()]);p.e=E(p[0],p[1]);samples.push(p);}
+    elites=[...samples].sort((a,b)=>a.e-b.e).slice(0,K);
+    const m=[0,1].map(d=>elites.reduce((a,p)=>a+p[d],0)/K);
+    const s=[0,1].map(d=>Math.max(.002,Math.sqrt(elites.reduce((a,p)=>a+(p[d]-m[d])**2,0)/K)));
+    return {m,s};
+  }
+  async function iterate(animate,tok){
+    if(iter>=ITERS)return false;
+    const {m,s}=compute();
+    if(animate){
+      const k=iter<3?1:.45;
+      for(const p of [1,2,3]){phase=p;C.draw();readout();await wait((p===2?1100:900)*k);if(tok!==cancel)return false;}
+      phase=4;readout();await tween(mu,m,sd[0]>.2?[.2,.2]:sd,s,650*k,tok);if(tok!==cancel)return false;
+    }else phase=4;
+    mu=m;sd=s;drawMu=m.slice();drawSd=s.slice();iter++;path.push(m.slice());phase=4;C.draw();readout();return true;
+  }
+  function reset(){cancel++;mu=[0,0];sd=[1,1];drawMu=[0,0];drawSd=[1,1];iter=0;samples=[];elites=[];path=[[0,0]];phase=0;C.draw();readout();}
+  async function run(n){const tok=++cancel;busy=true;for(let i=0;i<n;i++){if(!(await iterate(!reduce,tok)))break;if(tok!==cancel)break;}busy=false;}
+  $('#cemStep').onclick=()=>{if(iter>=ITERS)reset();run(1);};
+  $('#cemReset').onclick=reset;
+  $('#cemRun').onclick=()=>{reset();run(ITERS);};
+  reset();
+  // resting state: two finished iterations
+  iterate(false,cancel);iterate(false,cancel);C.draw();readout();
+})();
+
+/* ---------- robot bars ---------- */
+(function(){
+  const d=[['Reach','',100,100],['Grasp','cup',15,65],['Grasp','box',0,25],['Reach with object','cup',15,75],['Reach with object','box',70,75],['Pick-and-place','cup',15,80],['Pick-and-place','box',10,65]];
+  $('#robotBars').innerHTML=d.map(r=>`<div class="row"><span>${r[0]}${r[1]?`<small>${r[1]}</small>`:''}</span><div class="bars">
+    <div class="b v" title="V-JEPA 2-AC: ${r[3]}%"><i style="width:calc(${r[3]}% * .86)"></i>${r[3]}</div>
+    <div class="b o" title="Octo: ${r[2]}%"><i style="width:calc(${r[2]}% * .86)"></i>${r[2]}</div></div></div>`).join('');
+})();
+
+/* loop dot respects reduced motion */
+if(reduce){const d=$('#loopDot');if(d)d.remove();}
+})();
+</script>
+
+</body></html>

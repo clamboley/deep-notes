@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 490" role="img" aria-labelledby="title desc">
+  <title id="title">V-JEPA 2 visual summary</title>
+  <desc id="desc">Observed video tokens enter an encoder, then a predictor estimates future features toward a goal.</desc>
+  <rect width="760" height="490" fill="#e7ebf0"/>
+  <rect x="23" y="23" width="714" height="444" rx="16" fill="#f8f9fb" stroke="#cbd4df"/>
+  <text x="55" y="76" fill="#5a6676" font-family="monospace" font-size="17" letter-spacing="2">VIDEO  /  PREDICTION  /  PLANNING</text>
+  <path d="M54 95H706" stroke="#d3dae3"/>
+  <g fill="#2f62d6">
+    <rect x="78" y="178" width="38" height="38" rx="4"/><rect x="122" y="178" width="38" height="38" rx="4"/><rect x="166" y="178" width="38" height="38" rx="4"/>
+    <rect x="78" y="222" width="38" height="38" rx="4"/><rect x="122" y="222" width="38" height="38" rx="4"/><rect x="166" y="222" width="38" height="38" rx="4"/>
+  </g>
+  <g fill="none" stroke="#2f62d6" stroke-width="3" stroke-dasharray="6 6">
+    <rect x="78" y="266" width="38" height="38" rx="4"/><rect x="122" y="266" width="38" height="38" rx="4"/><rect x="166" y="266" width="38" height="38" rx="4"/>
+  </g>
+  <path d="M226 239h39" stroke="#8390a0" stroke-width="3"/><path d="m264 239-10-7v14z" fill="#8390a0"/>
+  <rect x="278" y="172" width="136" height="135" rx="11" fill="#fff" stroke="#2f62d6" stroke-width="2"/>
+  <text x="346" y="234" fill="#152030" font-family="Arial,sans-serif" font-size="25" font-weight="700" text-anchor="middle">Encoder</text>
+  <text x="346" y="260" fill="#5a6676" font-family="monospace" font-size="14" text-anchor="middle">V-JEPA 2</text>
+  <path d="M426 239h39" stroke="#8390a0" stroke-width="3"/><path d="m464 239-10-7v14z" fill="#8390a0"/>
+  <rect x="478" y="172" width="136" height="135" rx="11" fill="#fff" stroke="#c7306b" stroke-width="2"/>
+  <text x="546" y="234" fill="#152030" font-family="Arial,sans-serif" font-size="25" font-weight="700" text-anchor="middle">Predictor</text>
+  <text x="546" y="260" fill="#c7306b" font-family="monospace" font-size="14" text-anchor="middle">future features</text>
+  <path d="M626 239h38" stroke="#8390a0" stroke-width="3"/><path d="m663 239-10-7v14z" fill="#8390a0"/>
+  <g fill="#c7306b"><rect x="677" y="199" width="21" height="21" rx="3"/><rect x="677" y="225" width="21" height="21" rx="3"/><rect x="677" y="251" width="21" height="21" rx="3"/></g>
+  <path d="M545 309v54h91" fill="none" stroke="#b88300" stroke-width="2" stroke-dasharray="5 5"/>
+  <circle cx="651" cy="363" r="12" fill="none" stroke="#b88300" stroke-width="4"/>
+  <circle cx="651" cy="363" r="3" fill="#b88300"/>
+  <text x="78" y="366" fill="#2f62d6" font-family="monospace" font-size="16">observed</text>
+  <text x="478" y="367" fill="#c7306b" font-family="monospace" font-size="16">predicted</text>
+  <text x="630" y="400" fill="#9f7100" font-family="monospace" font-size="16">goal</text>
+</svg>

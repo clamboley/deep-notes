@@ -9,5 +9,16 @@
     "coverAlt": "Observed video frames feed an encoder, whose features guide a predicted future and a goal.",
     "note": "papers/v-jepa-2/index.html",
     "video": "videos/v-jepa-2.mp4"
+  },
+  {
+    "slug": "calm",
+    "title": "CALM",
+    "paperDate": "2025-09-08",
+    "description": "A continuous VAE frame and a consistency-model sampler replace stacked RVQ tokens in audio language models.",
+    "labels": ["Audio", "Language models", "Generative models"],
+    "cover": "assets/calm-cover.svg",
+    "coverAlt": "A waveform is encoded by a VAE into one continuous vector per frame, replacing stacked RVQ levels; a language model and consistency head then sample the next vector.",
+    "note": "papers/calm/index.html",
+    "video": "videos/calm.mp4"
   }
 ]

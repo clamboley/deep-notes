@@ -1,0 +1,854 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>CALM Notes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<style>
+/* Layout: one reading column (~42rem) inside a 58rem wrap; sticky section index.
+   Color encodes role everywhere: blue = observed / encoded from real audio, rose = produced by a model, amber = target. */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --soft:#E7EBF0; --line:#D3DAE3; --ink:#152030; --muted:#5A6676;
+  --obs:#2F62D6; --pred:#C7306B; --goal:#B88300;
+  --obs-t:#E2EAFA; --pred-t:#F8E2EA; --goal-t:#F5EBD2;
+  --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --f-math:"STIX Two Text","Cambria Math","Times New Roman",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E141B; --surface:#151D27; --soft:#1D2733; --line:#2A3542; --ink:#E3E9F0; --muted:#97A3B2;
+    --obs:#6A90F0; --pred:#E26092; --goal:#C99A22;
+    --obs-t:#1A2945; --pred-t:#3A1B2A; --goal-t:#33290F; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E141B; --surface:#151D27; --soft:#1D2733; --line:#2A3542; --ink:#E3E9F0; --muted:#97A3B2;
+  --obs:#6A90F0; --pred:#E26092; --goal:#C99A22;
+  --obs-t:#1A2945; --pred-t:#3A1B2A; --goal-t:#33290F; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:400 1rem/1.62 var(--f-body);-webkit-font-smoothing:antialiased}
+a{color:var(--obs);text-underline-offset:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--obs);outline-offset:2px;border-radius:4px}
+.wrap{max-width:58rem;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));padding-block:0 4rem}
+.prose{max-width:42rem}
+p{margin:0 0 .9rem}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+.m{font-family:var(--f-math);font-size:1.12em;white-space:nowrap}
+.m i{font-style:italic}
+.c-obs{color:var(--obs)} .c-pred{color:var(--pred)} .c-goal{color:var(--goal)}
+.mono{font-family:var(--f-mono)}
+
+nav.index{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav.index .in{max-width:58rem;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav.index .in::-webkit-scrollbar{display:none}
+nav.index a{flex:none;font:500 .78rem/1 var(--f-mono);color:var(--muted);text-decoration:none;padding:12px 8px;border-bottom:2px solid transparent;letter-spacing:.02em}
+nav.index a:hover{color:var(--ink)}
+nav.index a.on{color:var(--ink);border-bottom-color:var(--ink)}
+
+header.top{padding-block:3rem 0}
+.meta{font:500 .75rem/1.5 var(--f-mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+h1{font-size:clamp(3rem,11vw,5.4rem);font-weight:800;font-stretch:125%;letter-spacing:-.02em;line-height:.95;margin:.6rem 0 .7rem}
+.subtitle{font-size:1.15rem;max-width:36rem;margin-bottom:.6rem}
+.authors{font-size:.875rem;color:var(--muted);margin-bottom:1.6rem}
+.thesis{font-size:1.06rem;max-width:42rem}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.85rem;color:var(--muted);margin-top:1rem}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block;flex:none}
+
+.pipe{display:grid;grid-template-columns:1fr auto 1.15fr auto 1.15fr auto 1.15fr;align-items:stretch;margin-top:2rem}
+.pnode{display:flex;flex-direction:column;gap:4px;padding:12px 12px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);text-decoration:none;min-width:0;transition:border-color .2s,transform .2s}
+a.pnode:hover{border-color:var(--ink);transform:translateY(-2px)}
+.pnode .k{font:500 .7rem/1 var(--f-mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.pnode b{font:700 1rem/1.2 var(--f-display);font-stretch:108%}
+.pnode small{font-size:.8rem;color:var(--muted);line-height:1.4}
+.pnode.data{background:transparent;border-style:dashed}
+.pconn{position:relative;width:34px;align-self:center;height:2px;background:var(--line)}
+.pconn::after{content:"";position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left:7px solid var(--line);border-right:0}
+.pconn i{position:absolute;top:-3px;left:0;width:8px;height:8px;border-radius:50%;background:var(--obs);animation:flow 2.4s linear infinite}
+.pconn.p i{background:var(--pred)}
+@keyframes flow{from{left:-2px;opacity:0}15%{opacity:1}85%{opacity:1}to{left:26px;opacity:0}}
+.pside{grid-column:5 / span 1;margin-top:8px;font-size:.78rem;color:var(--muted);padding-left:12px;border-left:2px solid var(--line)}
+.pside a{color:var(--muted)}
+.pside.r{grid-column:7 / span 1}
+@media (max-width:760px){
+  .pipe{grid-template-columns:1fr}
+  .pconn{width:2px;height:22px;justify-self:center}
+  .pconn::after{right:auto;left:-4px;top:auto;bottom:-1px;border:5px solid transparent;border-top:7px solid var(--line);border-bottom:0}
+  .pconn i{left:-3px;top:0;animation-name:flowv}
+  @keyframes flowv{from{top:-2px;opacity:0}15%{opacity:1}85%{opacity:1}to{top:16px;opacity:0}}
+  .pside,.pside.r{grid-column:auto;margin:6px 0 0 0}
+}
+
+section.stage{padding-top:3.5rem;scroll-margin-top:3rem}
+.eyebrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font:500 .75rem/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.7rem}
+.eyebrow .n{display:inline-grid;place-items:center;width:22px;height:22px;border:1.5px solid var(--ink);border-radius:5px;color:var(--ink);letter-spacing:0}
+.chip{font:500 .7rem/1 var(--f-mono);letter-spacing:.04em;text-transform:none;padding:4px 7px;border-radius:99px;border:1px solid var(--pred);color:var(--pred)}
+h2{font-size:clamp(1.55rem,4.4vw,2.15rem);font-weight:700;font-stretch:112%;letter-spacing:-.01em;line-height:1.12;margin-bottom:.9rem}
+h3.sub{font-size:1.12rem;font-weight:650;font-stretch:105%;margin:2.2rem 0 .6rem}
+.lede{font-size:1.04rem}
+
+.fig{margin:1.4rem 0 1.6rem;padding:16px;border-radius:10px;background:var(--surface);border:1px solid var(--line);min-width:0}
+.fig .bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:12px}
+.fig figcaption{font-size:.84rem;color:var(--muted);margin-top:12px;max-width:44rem;line-height:1.5}
+.fig figcaption b{color:var(--ink);font-weight:600}
+.figlead{font-size:.9rem;margin:0 0 12px;max-width:44rem}
+.readout{font:400 .8rem/1.5 var(--f-mono);color:var(--ink);margin-top:10px;min-height:3em;max-width:46rem}
+canvas{display:block;width:100%}
+svg{display:block;max-width:100%;height:auto}
+.only-wide{display:block}.only-narrow{display:none}
+@media (max-width:560px){.only-wide{display:none}.only-narrow{display:block}}
+
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{font:500 .78rem/1 var(--f-body);padding:8px 11px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.btn{font:500 .78rem/1 var(--f-body);padding:8px 12px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--ink)}
+.btn:disabled{opacity:.4;cursor:default}
+label.sl{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted)}
+input[type=range]{accent-color:var(--ink);width:150px}
+
+.eq{margin:1.2rem 0;padding:14px 16px;border-left:3px solid var(--ink);background:var(--surface);border-radius:0 8px 8px 0}
+.eq .row{overflow-x:auto;padding-bottom:2px}
+.eq .lbl{font:500 .7rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:.8rem 0 .3rem}
+.eq .lbl:first-child{margin-top:0}
+.eq p{margin:0;font-size:.94rem;max-width:42rem}
+
+details{margin:1rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+details + details{margin-top:-1rem;border-top:0}
+summary{cursor:pointer;list-style:none;padding:11px 0;font-weight:500;display:flex;gap:10px;align-items:baseline}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:var(--f-mono);color:var(--muted);width:12px;flex:none}
+details[open] summary::before{content:"−"}
+summary .q{font-family:var(--f-mono);font-size:.7rem;color:var(--pred);letter-spacing:.06em;text-transform:uppercase;flex:none}
+details .body{padding:0 0 14px 22px;font-size:.93rem;max-width:44rem}
+
+/* rvq figure */
+.rv .pl{fill:none;stroke:var(--line)}
+.rv .axl{stroke:var(--line)}
+.rv .cw{fill:var(--muted);opacity:.5}
+.rv .cwS{fill:var(--pred)}
+.rv .ch{stroke:var(--pred);stroke-width:1.6;opacity:.45}
+.rv .ch.cur{opacity:1}
+.rv .mk{fill:var(--pred)}
+.rv .res{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:3 3}
+.rv .tgt{fill:var(--obs-t);stroke:var(--obs);stroke-width:2}
+.rv text{font-family:var(--f-mono);font-size:10.5px;fill:var(--muted)}
+.rv .hd{fill:var(--ink);font-size:11px}
+.rv .tk{fill:var(--pred-t);stroke:var(--pred);stroke-width:1.1}
+.rv .tkf{fill:none;stroke:var(--line);stroke-dasharray:3 2}
+.rv .tkt{fill:var(--ink);font-size:11px}
+.rv .eb{fill:var(--muted);opacity:.6}
+.rv .ln{stroke:var(--muted);opacity:.6}
+
+/* vae schema */
+.va .bx{fill:var(--surface);stroke:var(--ink);stroke-width:1.2}
+.va .wO{fill:none;stroke:var(--obs);stroke-width:1.6;stroke-linejoin:round}
+.va .wP{fill:none;stroke:var(--pred);stroke-width:1.6;stroke-linejoin:round}
+.va .zt{fill:var(--obs-t);stroke:var(--obs);stroke-width:1.1}
+.va .ar{stroke:var(--muted);stroke-width:1.3;fill:none}
+.va .mkm{fill:var(--muted)}
+.va .lossl{stroke:var(--goal);stroke-width:1.2;stroke-dasharray:4 3;fill:none}
+.va .pill{fill:var(--goal-t);stroke:var(--goal);stroke-width:1}
+.va .t1{font-family:var(--f-display);font-size:13.5px;font-weight:650;fill:var(--ink)}
+.va .t2{font-family:var(--f-mono);font-size:10px;fill:var(--muted)}
+.va .mth{font-family:var(--f-math);font-size:14px;fill:var(--ink)}
+.va .pt{font-family:var(--f-mono);font-size:10.5px;fill:var(--ink)}
+
+/* language model figure */
+.lm .tO{fill:var(--obs-t);stroke:var(--obs);stroke-width:1.2}
+.lm .tP{fill:var(--pred-t);stroke:var(--pred);stroke-width:1.2}
+.lm .tN{fill:var(--surface);stroke:var(--obs);stroke-width:1.1;stroke-dasharray:3 2}
+.lm .tG{fill:var(--goal-t);stroke:var(--goal);stroke-width:1.2}
+.lm .kb{fill:var(--obs);opacity:.45}
+.lm .bxL{fill:var(--soft);stroke:var(--line)}
+.lm .hd{fill:var(--pred-t);stroke:var(--pred);stroke-width:1.2}
+.lm .ln{stroke:var(--muted);stroke-width:1;opacity:.5}
+.lm .pa{fill:none;stroke:var(--ink);stroke-width:1.4}
+.lm .sum{fill:var(--surface);stroke:var(--ink);stroke-width:1.3}
+.lm .gl{stroke:var(--goal);stroke-width:1.4;stroke-dasharray:3 3}
+.lm .mkk{fill:var(--ink)}
+.lm text{font-family:var(--f-math);font-size:14px;fill:var(--ink)}
+.lm .lb{font-family:var(--f-mono);font-size:10.5px;fill:var(--muted)}
+.lm .bl{font-family:var(--f-mono);font-size:10.5px;fill:var(--ink)}
+.lm g{transition:opacity .35s}
+.lm .dim{opacity:.15}
+
+/* ablation bars */
+.ab{display:grid;gap:8px}
+.ab .r{display:grid;grid-template-columns:minmax(10rem,15rem) 1fr;gap:12px;align-items:center;font-size:.86rem}
+.ab .r > span{min-width:0;line-height:1.3}
+.ab .b{display:flex;align-items:center;gap:8px;font:500 .78rem/1 var(--f-mono);font-variant-numeric:tabular-nums;min-width:0}
+.ab .b i{display:block;height:10px;border-radius:0 3px 3px 0;background:var(--muted);opacity:.55}
+.ab .r.base .b i{background:var(--ink);opacity:1}
+@media (max-width:520px){.ab .r{grid-template-columns:1fr;gap:3px}}
+
+/* chart */
+.ch .ax{stroke:var(--line);stroke-width:1}
+.ch .gr{stroke:var(--line);stroke-width:1;opacity:.6}
+.ch text{font-family:var(--f-mono);font-size:10.5px;fill:var(--muted)}
+.ch .tl{fill:var(--ink);font-size:11px}
+.ch .s1{fill:none;stroke:var(--ink);stroke-width:2}
+.ch .s2{fill:none;stroke:var(--muted);stroke-width:2;stroke-dasharray:5 4}
+.ch .bl{stroke:var(--muted);stroke-width:1.2;stroke-dasharray:2 3}
+.ch .d1{fill:var(--ink);stroke:var(--surface);stroke-width:2}
+.ch .d2{fill:var(--surface);stroke:var(--muted);stroke-width:2}
+.ch .rt{fill:var(--soft)}
+.ch .hit{fill:transparent;cursor:pointer}
+
+ul.lim{padding-left:1.1rem;display:grid;gap:.6rem;margin:1rem 0}
+ul.lim b{font-weight:600}
+footer{margin-top:3.5rem;padding-top:1rem;border-top:1px solid var(--line);font-size:.8rem;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){
+  .pconn i{animation:none;display:none}
+  *{transition:none!important}
+}
+</style>
+
+<nav class="index" aria-label="Sections"><div class="in">
+  <a href="#top">Overview</a><a href="#why">Motivation</a><a href="#vae">1 · VAE</a><a href="#lm">2 · Language model</a><a href="#head">3 · Consistency head</a><a href="#infer">4 · Sampling controls</a><a href="#results">Results</a><a href="#limits">Limits</a>
+</div></nav>
+
+<div class="wrap">
+
+<header class="top" id="top">
+  <div class="meta">Paper note · Kyutai, IRCAM · Sep 2025 (v3) · <a href="https://arxiv.org/abs/2509.06926">arXiv 2509.06926</a> · <a href="https://github.com/kyutai-labs/pocket-tts">code (Pocket TTS)</a></div>
+  <h1>CALM</h1>
+  <p class="subtitle">Continuous Audio Language Models</p>
+  <p class="authors">Rouard*, Orsini*, Roebel, Zeghidour, Défossez</p>
+  <p class="thesis">Replace RVQ tokens with continuous VAE frames. A causal Transformer reads the past frames and outputs one vector; a small MLP trained as a consistency model turns random noise into the next frame in 1 to 4 calls. On speech and music this matches or beats RVQ language models, with a far cheaper per-frame sampler.</p>
+  <div class="legend" aria-label="Color code">
+    <span><i class="sw" style="background:var(--obs)"></i>observed: encoded from real audio</span>
+    <span><i class="sw" style="background:var(--pred)"></i>produced by a model</span>
+    <span><i class="sw" style="background:var(--goal)"></i>training target</span>
+  </div>
+
+  <div class="pipe" role="list">
+    <div class="pnode data" role="listitem"><span class="k">Data</span><b>Waveform</b><small>Speech or music, mono</small></div>
+    <div class="pconn" aria-hidden="true"><i></i></div>
+    <a class="pnode" href="#vae" role="listitem"><span class="k">Stage 1</span><b>VAE</b><small>One continuous vector per frame, no quantizer</small></a>
+    <div class="pconn" aria-hidden="true"><i></i></div>
+    <a class="pnode" href="#lm" role="listitem"><span class="k">Stage 2 · VAE frozen</span><b>Language model</b><small>Causal Transformer: past frames → one vector Z</small></a>
+    <div class="pconn p" aria-hidden="true"><i></i></div>
+    <a class="pnode" href="#head" role="listitem"><span class="k">Stage 2 · same loss</span><b>Consistency head</b><small>MLP: noise + Z → next frame</small></a>
+    <div class="pside">Music adds context noise and a <a href="#lm">short-context Transformer</a></div>
+    <div class="pside r">Sampling: <a href="#infer">temperature, guidance, distillation</a></div>
+  </div>
+</header>
+
+<!-- ============ MOTIVATION ============ -->
+<section class="stage" id="why">
+  <div class="eyebrow">Motivation</div>
+  <h2>RVQ tokens of a frame depend on each other</h2>
+  <p class="lede prose">An RVQ codec writes each audio frame as a stack of tokens. Each level encodes what the previous levels missed, so a language model has to generate a frame's tokens one after another (the RQ-Transformer), and better audio means more levels.</p>
+
+  <figure class="fig">
+    <div class="bar">
+      <button class="btn" id="rvNext">Next level</button>
+      <button class="btn" id="rvReset">Back to level 1</button>
+      <button class="btn" id="rvNew">New frame</button>
+    </div>
+    <p class="figlead">One frame. The blue point is the encoder's continuous output. Each level picks one of 9 codewords, placed around the reconstruction built so far.</p>
+    <div id="rvWrap"></div>
+    <div class="readout" id="rvRead"></div>
+    <figcaption>Toy in 2 dimensions with 9 codewords per level. The paper's speech RVQ uses 8 levels, music 32.</figcaption>
+  </figure>
+
+  <p class="prose">CALM keeps the encoder's vector as it is and generates all of it in one pass. It builds on MAR (image generation), where a small diffusion MLP samples each continuous token. CALM found that setup slow and unstable on long audio.</p>
+</section>
+
+<!-- ============ STAGE 1: VAE ============ -->
+<section class="stage" id="vae">
+  <div class="eyebrow"><span class="n">1</span>Tokenizer</div>
+  <h2>A VAE instead of an RVQ codec</h2>
+  <p class="lede prose">The audio tokenizer keeps the Mimi recipe (causal convolutions plus Transformers, adversarial training) and swaps the RVQ bottleneck for a VAE bottleneck with a Gaussian prior. Following Evans et al. (2024).</p>
+
+  <figure class="fig">
+    <svg class="va only-wide" viewBox="0 0 640 214" role="img" aria-label="VAE: waveform to encoder to one latent vector per frame to decoder, with its losses">
+      <defs><marker id="vaA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" class="mkm"/></marker></defs>
+      <path class="lossl" d="M52 66V40H588V66"/>
+      <text class="pt" x="320" y="32" text-anchor="middle">x̂ vs x: reconstruction (time, frequency) + adversarial</text>
+      <path class="wO" d="M12 100Q16 88 20 100Q24 112 28 100Q32 78 36 100Q40 122 44 100Q48 84 52 100Q56 116 60 100Q64 74 68 100Q72 126 76 100Q80 90 84 100Q88 110 92 100"/>
+      <text class="mth" x="52" y="146" text-anchor="middle"><tspan font-style="italic">x</tspan></text>
+      <line class="ar" x1="98" y1="100" x2="116" y2="100" marker-end="url(#vaA)"/>
+      <rect class="bx" x="118" y="78" width="124" height="44" rx="8"/>
+      <text class="t1" x="180" y="97" text-anchor="middle">Encoder</text>
+      <text class="t2" x="180" y="112" text-anchor="middle">conv + Transformer</text>
+      <line class="ar" x1="246" y1="100" x2="264" y2="100" marker-end="url(#vaA)"/>
+      <text class="t2" x="326" y="76" text-anchor="middle">one vector per frame</text>
+      <rect class="zt" x="268" y="85" width="20" height="30" rx="3"/><rect class="zt" x="292" y="85" width="20" height="30" rx="3"/><rect class="zt" x="316" y="85" width="20" height="30" rx="3"/><rect class="zt" x="340" y="85" width="20" height="30" rx="3"/><rect class="zt" x="364" y="85" width="20" height="30" rx="3"/>
+      <text class="mth" x="326" y="136" text-anchor="middle"><tspan font-style="italic">z</tspan> ~ 𝒩(<tspan font-style="italic">μ</tspan>, <tspan font-style="italic">σ</tspan>²)</text>
+      <line class="ar" x1="390" y1="100" x2="408" y2="100" marker-end="url(#vaA)"/>
+      <rect class="bx" x="410" y="78" width="118" height="44" rx="8"/>
+      <text class="t1" x="469" y="105" text-anchor="middle">Decoder</text>
+      <line class="ar" x1="532" y1="100" x2="546" y2="100" marker-end="url(#vaA)"/>
+      <path class="wP" d="M548 100Q552 88 556 100Q560 112 564 100Q568 78 572 100Q576 122 580 100Q584 84 588 100Q592 116 596 100Q600 74 604 100Q608 126 612 100Q616 90 620 100Q624 110 628 100"/>
+      <text class="mth" x="588" y="146" text-anchor="middle"><tspan font-style="italic">x̂</tspan></text>
+      <line class="lossl" x1="326" y1="144" x2="326" y2="156"/>
+      <rect class="pill" x="271" y="157" width="110" height="20" rx="10"/>
+      <text class="pt" x="326" y="171" text-anchor="middle">KL to 𝒩(0, I)</text>
+      <rect class="pill" x="236" y="183" width="180" height="20" rx="10"/>
+      <text class="pt" x="326" y="197" text-anchor="middle">WavLM features (speech only)</text>
+    </svg>
+    <svg class="va only-narrow" viewBox="0 0 360 430" role="img" aria-label="VAE: waveform to encoder to one latent vector per frame to decoder, with its losses">
+      <defs><marker id="vaB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" class="mkm"/></marker></defs>
+      <path class="wO" d="M140 30Q144 18 148 30Q152 42 156 30Q160 8 164 30Q168 52 172 30Q176 14 180 30Q184 46 188 30Q192 4 196 30Q200 56 204 30Q208 20 212 30Q216 40 220 30"/>
+      <text class="mth" x="124" y="35" text-anchor="end"><tspan font-style="italic">x</tspan></text>
+      <line class="ar" x1="180" y1="56" x2="180" y2="72" marker-end="url(#vaB)"/>
+      <rect class="bx" x="110" y="74" width="140" height="44" rx="8"/>
+      <text class="t1" x="180" y="93" text-anchor="middle">Encoder</text>
+      <text class="t2" x="180" y="108" text-anchor="middle">conv + Transformer</text>
+      <line class="ar" x1="180" y1="122" x2="180" y2="138" marker-end="url(#vaB)"/>
+      <rect class="zt" x="122" y="142" width="20" height="30" rx="3"/><rect class="zt" x="146" y="142" width="20" height="30" rx="3"/><rect class="zt" x="170" y="142" width="20" height="30" rx="3"/><rect class="zt" x="194" y="142" width="20" height="30" rx="3"/><rect class="zt" x="218" y="142" width="20" height="30" rx="3"/>
+      <text class="mth" x="250" y="162"><tspan font-style="italic">z</tspan> ~ 𝒩(<tspan font-style="italic">μ</tspan>, <tspan font-style="italic">σ</tspan>²)</text>
+      <text class="t2" x="180" y="188" text-anchor="middle">one vector per frame</text>
+      <line class="ar" x1="180" y1="196" x2="180" y2="212" marker-end="url(#vaB)"/>
+      <rect class="bx" x="110" y="214" width="140" height="44" rx="8"/>
+      <text class="t1" x="180" y="241" text-anchor="middle">Decoder</text>
+      <line class="ar" x1="180" y1="262" x2="180" y2="278" marker-end="url(#vaB)"/>
+      <path class="wP" d="M140 304Q144 292 148 304Q152 316 156 304Q160 282 164 304Q168 326 172 304Q176 288 180 304Q184 320 188 304Q192 278 196 304Q200 330 204 304Q208 294 212 304Q216 314 220 304"/>
+      <text class="mth" x="124" y="309" text-anchor="end"><tspan font-style="italic">x̂</tspan></text>
+      <rect class="pill" x="20" y="344" width="320" height="22" rx="11"/>
+      <text class="pt" x="180" y="359" text-anchor="middle">x̂ vs x: reconstruction + adversarial</text>
+      <rect class="pill" x="20" y="372" width="320" height="22" rx="11"/>
+      <text class="pt" x="180" y="387" text-anchor="middle">z: KL to 𝒩(0, I)</text>
+      <rect class="pill" x="20" y="400" width="320" height="22" rx="11"/>
+      <text class="pt" x="180" y="415" text-anchor="middle">z: WavLM features (speech only)</text>
+    </svg>
+    <figcaption>Amber: what each loss compares. Trained once, before the language model; stage 2 only sees the sequence <i>z</i>.</figcaption>
+  </figure>
+
+  <div class="eq">
+    <div class="lbl">Objective (eq. 2)</div>
+    <div class="row"><span class="m"><i>L</i><sub>VAE</sub> = λ<sub>t</sub><i>L</i><sub>t</sub>(<span class="c-obs"><i>x</i></span>, <span class="c-pred"><i>x̂</i></span>) + λ<sub>f</sub><i>L</i><sub>f</sub>(<span class="c-obs"><i>x</i></span>, <span class="c-pred"><i>x̂</i></span>) + λ<sub>adv</sub><i>L</i><sub>adv</sub>(<span class="c-pred"><i>x̂</i></span>) + λ<sub>feat</sub><i>L</i><sub>feat</sub>(<span class="c-obs"><i>x</i></span>, <span class="c-pred"><i>x̂</i></span>) + λ<sub>KL</sub><i>L</i><sub>KL</sub> + λ<sub>distill</sub><i>L</i><sub>distill</sub></span></div>
+    <div class="lbl">In words</div>
+    <p>The decoded audio <span class="c-pred"><i>x̂</i></span> must match the input <span class="c-obs"><i>x</i></span> in time and frequency and fool discriminators. The latents must stay close to a standard Gaussian. For speech, the whole latent is also pulled toward WavLM features, so it carries phonetic content.</p>
+  </div>
+
+  <details>
+    <summary><span class="q">Q</span>Is the VAE trained separately from the backbone?</summary>
+    <div class="body">Yes. It is trained first, with its own loss. The stage-2 loss (eq. 3) trains the backbone, the short-context Transformer and the head; the VAE is not among those parameters, and the paper frames CALM, like MAR, as modelling the latents of a pretrained VAE. Joint training is not tried.</div>
+  </details>
+</section>
+
+<!-- ============ STAGE 2: LANGUAGE MODEL ============ -->
+<section class="stage" id="lm">
+  <div class="eyebrow"><span class="n">2</span>Language model</div>
+  <h2>Next-frame prediction with a noisy long context and a clean short one</h2>
+  <p class="lede prose">This is an ordinary autoregressive language model with frames in place of tokens. To produce frame <i>s</i>, a causal Transformer reads frames 1 to <i>s</i>−1 and outputs one vector <i>Z<sup>s</sup></i>. The head (§3) turns <i>Z<sup>s</sup></i> into a sample of frame <i>s</i>, which is appended, and the loop goes on. Training uses teacher forcing, as with tokens.</p>
+  <p class="prose">On music, this plain setup drifts: small errors in generated frames accumulate and the audio degrades within seconds. CALM adds two pieces, shown below.</p>
+
+  <figure class="fig">
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Phase">
+        <button id="lmTr" aria-pressed="true">Training</button><button id="lmIn" aria-pressed="false">Generation</button>
+      </div>
+      <div class="seg" role="group" aria-label="Domain">
+        <button id="lmMu" aria-pressed="true">Music</button><button id="lmSp" aria-pressed="false">Speech</button>
+      </div>
+      <button class="btn" id="lmAct">Resample noise</button>
+    </div>
+    <p class="figlead">Predicting one frame. Left: the past frames. Right: the head and the frame it produces.</p>
+    <div id="lmWrap"></div>
+    <div class="readout" id="lmRead"></div>
+    <figcaption>Drawn: the last 8 frames (5 on a phone) and K = 3; the paper uses K = 10, about 0.4 s of music. In training, the same computation runs for every position at once.</figcaption>
+  </figure>
+
+  <div class="eq">
+    <div class="lbl">Noise augmentation (music)</div>
+    <div class="row"><span class="m"><span class="c-obs"><i>x̃<sup>s</sup></i></span> = √<i>k<sub>s</sub></i> · <i>ε<sub>s</sub></i> + √(1 − <i>k<sub>s</sub></i>) · <span class="c-obs"><i>x<sup>s</sup></i></span>,&nbsp;&nbsp; <i>k<sub>s</sub></i> ~ U(0, 1),&nbsp; <i>ε<sub>s</sub></i> ~ 𝒩(0, I)</span></div>
+    <div class="lbl">In words</div>
+    <p>During training, every frame fed to the long-context Transformer gets its own random amount of noise, from none to pure noise. At generation it reads its own imperfect frames without noise, and it has learned not to trust any single frame too much. Taken from Pasini et al. (2024b), with square roots so the variance stays the same.</p>
+    <div class="lbl">Conditioning</div>
+    <div class="row"><span class="m"><i>Z<sup>s</sup></i> = <i>T</i><sub>long</sub>(<span class="c-obs"><i>x̃</i><sup>1</sup>, …, <i>x̃</i><sup><i>s</i>−1</sup></span>) + <i>T</i><sub>short</sub>(<span class="c-obs"><i>x</i><sup><i>s</i>−<i>K</i></sup>, …, <i>x</i><sup><i>s</i>−1</sup></span>)</span></div>
+    <div class="lbl">In words</div>
+    <p>A large causal Transformer reads the whole noised past for coarse structure. A small causal Transformer reads only the last K = 10 clean frames for fine detail. Their outputs are summed and condition the head.</p>
+  </div>
+
+  <p class="prose">With noise alone, music kept its rhythm but lost its instruments and faded to silence after 10–15 s: the noise keeps fine detail out of the long context. The clean short context brings that detail back to the head. Speech needs neither piece; the authors saw no gain there. Ablation on music (FAD, lower is better, Tab. 5):</p>
+  <figure class="fig">
+    <div class="ab">
+      <div class="r base"><span>Full model</span><div class="b"><i style="width:calc(0.93 / 8.5 * 100%)"></i>0.93</div></div>
+      <div class="r"><span>without head batch multiplier</span><div class="b"><i style="width:calc(1.32 / 8.5 * 100%)"></i>1.32</div></div>
+      <div class="r"><span>without noise augmentation</span><div class="b"><i style="width:calc(1.63 / 8.5 * 100%)"></i>1.63</div></div>
+      <div class="r"><span>without short-context Transformer</span><div class="b"><i style="width:calc(4.03 / 8.5 * 100%)"></i>4.03</div></div>
+      <div class="r"><span>without all three (≈ MAR)</span><div class="b"><i style="width:calc(8.38 / 8.5 * 100%)"></i>8.38</div></div>
+    </div>
+  </figure>
+  <p class="prose"><b>Head batch multiplier.</b> The backbone dominates the cost of a training step, so each <i>Z<sup>s</sup></i> is reused for 8 head losses with different noise draws. Training converges faster.</p>
+
+  <details>
+    <summary>Speech continuation: inner monologue</summary>
+    <div class="body">Taken from Moshi. The backbone also reads and predicts a time-aligned transcript of its own speech; the same output vector feeds a text classifier and the head. Audio lags the text by 2 frames (160 ms), so the next word is known before its sound is produced.</div>
+  </details>
+</section>
+
+<!-- ============ HEAD ============ -->
+<section class="stage" id="head">
+  <div class="eyebrow"><span class="n">3</span>Consistency head <span class="chip">I got stuck here</span></div>
+  <h2>Turning noise into the next frame in one call</h2>
+  <p class="lede prose">Many next frames are plausible, so the head must draw one of them at random rather than output their average, which would sound blurred. With tokens, the softmax gives the distribution. Here, a small MLP turns random noise into a frame, conditioned on <i>Z<sup>s</sup></i>.</p>
+
+  <h3 class="sub">Background: flow matching</h3>
+  <p class="prose">Link every training frame to a noise sample by a path that blends one into the other. A flow-matching network learns which way to move at any point on such a path. To sample, you start from noise and follow those directions back to data in small steps, one network call per step. The directions change along the way, so a few large steps land in the wrong place.</p>
+  <div class="eq">
+    <div class="lbl">Noising path (TrigFlow, Lu &amp; Song 2025)</div>
+    <div class="row"><span class="m"><i>x<sub>t</sub></i> = cos(<i>t</i>) · <span class="c-goal"><i>x</i><sub>0</sub></span> + sin(<i>t</i>) · <i>ε</i>,&nbsp;&nbsp; <i>t</i> ∈ [0, π/2]</span></div>
+    <div class="lbl">In words</div>
+    <p>At <i>t</i> = 0 the point is the clean frame, at <i>t</i> = π/2 it is pure noise.</p>
+    <div class="lbl">Flow matching loss</div>
+    <div class="row"><span class="m"><i>L</i><sub>FM</sub> = 𝔼 ‖ <span class="c-pred"><i>F<sub>φ</sub></i>(<i>x<sub>t</sub></i>, <i>t</i>)</span> − d<i>x<sub>t</sub></i>/d<i>t</i> ‖²</span></div>
+    <div class="lbl">In words</div>
+    <p>Predict the direction of motion along the path from the noisy point and its noise level. CALM's TrigFlow head is this model, sampled in many steps.</p>
+  </div>
+
+  <h3 class="sub">Consistency: learn where the path ends</h3>
+  <p class="prose">A consistency model skips the walk. It learns a function <i>f</i> that takes any point on a path, with its noise level, and returns where that path ends. Sampling is one call: draw noise, apply <i>f</i>, get a frame.</p>
+  <p class="prose">The hard part is training, since nobody knows where the path through a noisy point ends. Two facts make it learnable. At noise level 0 the answer is known: a clean point is already the end of its path, so <i>f</i> returns its input, and this is built into the network. And two nearby points on the same path have the same end, so <i>f</i> must give them the same answer. Training enforces this agreement, and correct answers spread from the clean end of each path toward the noisy end.</p>
+
+  <figure class="fig">
+    <div class="bar">
+      <div class="seg" role="group" aria-label="View">
+        <button id="cfFlow" aria-pressed="true">Flow: small steps</button><button id="cfCm" aria-pressed="false">Consistency: one jump</button><button id="cfTr" aria-pressed="false">How it trains</button>
+      </div>
+    </div>
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Steps" id="cfSteps"></div>
+      <label class="sl" id="cfTlab" hidden>start at noise level <input type="range" id="cfT" min="0.1" max="1" step="0.01" value="1"></label>
+      <button class="btn" id="cfPlay" hidden>Train</button>
+    </div>
+    <canvas id="cfCv" aria-label="One noising path in a 2-D toy, with flow steps or consistency jumps"></canvas>
+    <div class="readout" id="cfRead"></div>
+    <figcaption>Toy in 2 dimensions; the path is computed exactly and the flow uses plain Euler steps. Step counts match the paper's Tab. 9. "How it trains" is a schematic: the real loss updates all noise levels at once.</figcaption>
+  </figure>
+
+  <div class="eq">
+    <div class="lbl">Parametrization</div>
+    <div class="row"><span class="m"><span class="c-pred"><i>f<sub>φ</sub></i>(<i>x<sub>t</sub></i>, <i>t</i>, <i>Z</i>)</span> = <i>c</i><sub>skip</sub>(<i>t</i>) · <i>x<sub>t</sub></i> + <i>c</i><sub>out</sub>(<i>t</i>) · <i>F<sub>φ</sub></i>(<i>x<sub>t</sub></i>, <i>t</i>, <i>Z</i>),&nbsp;&nbsp; <i>c</i><sub>skip</sub>(0) = 1, <i>c</i><sub>out</sub>(0) = 0</span></div>
+    <div class="lbl">In words</div>
+    <p>At noise level 0 the output is exactly the input. This is the anchor from the paragraph above.</p>
+    <div class="lbl">CALM objective (eq. 3), continuous-time consistency (Lu &amp; Song 2025)</div>
+    <div class="row"><span class="m"><i>L</i> = Σ<sub><i>s</i></sub> 𝔼<sub><i>t</i>, <i>ε</i></sub> [ <span style="font-size:.85em"><i>e</i><sup><i>w<sub>ψ</sub></i>(<i>t</i>)</sup>⁄<i>D</i></span> ‖ <span class="c-pred"><i>F<sub>φ</sub></i>(<i>x<sub>t</sub><sup>s</sup></i>, <i>t</i>, <i>Z<sup>s</sup></i>)</span> − <i>F</i><sub><i>φ̄</i></sub>(<i>x<sub>t</sub><sup>s</sup></i>, <i>t</i>, <i>Z<sup>s</sup></i>) − cos(<i>t</i>) · d<i>f</i><sub><i>φ̄</i></sub>(<i>x<sub>t</sub><sup>s</sup></i>, <i>t</i>, <i>Z<sup>s</sup></i>)⁄d<i>t</i> ‖² − <i>w<sub>ψ</sub></i>(<i>t</i>) ],&nbsp; <i>x<sub>t</sub><sup>s</sup></i> = cos(<i>t</i>) <span class="c-goal"><i>x<sup>s</sup></i></span> + sin(<i>t</i>) <i>ε</i></span></div>
+    <div class="lbl">In words</div>
+    <p>Noise the true frame <span class="c-goal"><i>x<sup>s</sup></i></span> to a random level <i>t</i>. The loss is zero when the predicted end stops changing as <i>t</i> moves along the path (d<i>f</i>/d<i>t</i> = 0): the agreement rule in continuous form. The target is built from the network's own output with gradients stopped (<i>φ̄</i>); <i>w<sub>ψ</sub></i> is a learned weight per noise level. Gradients also reach the backbone through <i>Z<sup>s</sup></i>, so this one loss trains the whole language model.</p>
+    <div class="lbl">Sampling</div>
+    <div class="row"><span class="m"><span class="c-pred"><i>x̂<sup>s</sup></i></span> = <i>f<sub>φ</sub></i>(<i>ε</i>, π/2, <i>Z<sup>s</sup></i>),&nbsp;&nbsp; <i>ε</i> ~ 𝒩(0, I)</span></div>
+    <div class="lbl">In words</div>
+    <p>One call on pure noise gives the next frame. With 4 steps (music), the estimate is re-noised to a lower level and the head is called again; a trained <i>f</i> is only approximate, and these extra calls correct it.</p>
+  </div>
+
+  <details>
+    <summary>Alternative head used for TTS: Lagrangian Self-Distillation</summary>
+    <div class="body">From Boffi et al. (2025). The network learns a jump between any two noise levels instead of only to level 0, trained with a mix of flow matching and self-distillation. For the ~300M text-to-speech model, 1-step LSD clearly beat 1-step consistency (MUSHRA 61.1 vs 46.8), and Pocket TTS uses it.</div>
+  </details>
+</section>
+
+<!-- ============ SAMPLING CONTROLS ============ -->
+<section class="stage" id="infer">
+  <div class="eyebrow"><span class="n">4</span>Sampling controls</div>
+  <h2>Temperature and guidance without logits</h2>
+  <p class="lede prose">A token model controls sampling through its softmax. The consistency head has none, so each control moves to the input noise or to <i>Z<sup>s</sup></i>.</p>
+
+  <div class="eq">
+    <div class="lbl">Gaussian temperature (Sec. 4.5)</div>
+    <div class="row"><span class="m"><i>ε</i> ~ 𝒩(0, <i>τ</i> I)</span></div>
+    <div class="lbl">In words</div>
+    <p>Shrinking the input noise is exactly a temperature on the Gaussian: samples stay in its likely region, trading diversity for quality. τ = 0.8 works for speech continuation, as for the RVQ model.</p>
+    <div class="lbl">Latent classifier-free guidance (Sec. 4.6)</div>
+    <div class="row"><span class="m"><i>Z</i><sub>CFG</sub> = <i>Z</i><sub>∅</sub> + <i>α</i> (<i>Z<sub>C</sub></i> − <i>Z</i><sub>∅</sub>)</span></div>
+    <div class="lbl">In words</div>
+    <p>Compute <i>Z</i> with and without the condition (text, CLAP embedding), push past the conditioned one, and give the result to the head. From SoundReactor (Saito et al., 2025).</p>
+    <div class="lbl">Latent distillation (Sec. 4.7)</div>
+    <div class="row"><span class="m">‖ <span class="c-pred"><i>Z</i><sub>student</sub></span> − <span class="c-goal"><i>Z</i><sub>CFG</sub>(teacher)</span> ‖²</span></div>
+    <div class="lbl">In words</div>
+    <p>A student backbone learns to output the guided <i>Z</i> directly, so guidance costs one pass instead of two. The head is copied unchanged and the student can be smaller: Pocket TTS goes from 24 to 6 layers, 100M parameters with the VAE decoder, faster than real time on a laptop CPU.</p>
+  </div>
+</section>
+
+<!-- ============ RESULTS ============ -->
+<section class="stage" id="results">
+  <div class="eyebrow">Results</div>
+  <h2>Better than RVQ at a fraction of the sampling cost</h2>
+  <figure class="fig">
+    <svg id="fadChart" class="ch" viewBox="0 0 640 300" role="img" aria-label="Music FAD against number of head calls, for consistency and TrigFlow heads, with the RVQ baseline"></svg>
+    <div class="readout" id="fadRead" style="min-height:1.5em"></div>
+    <figcaption>Music continuation, FAD (lower is better) against head calls per frame, log scales (Tab. 4 and 9). Shaded: faster than real time. Tap a point.</figcaption>
+  </figure>
+  <p class="prose"><b>Speech continuation.</b> The 1-step head beats the 8-level RVQ model on perplexity, acoustic quality and human-rated meaningfulness. Its sampler is 12.3× faster, but the whole generation only 1.3×, because the 2.2B backbone dominates.</p>
+  <p class="prose"><b>Text-to-speech.</b> With a 1-step LSD head, CALM has the lowest word error rate among the compared systems (1.81).</p>
+</section>
+
+<!-- ============ LIMITS ============ -->
+<section class="stage" id="limits">
+  <div class="eyebrow">Limitations</div>
+  <h2>Open points</h2>
+  <ul class="lim prose">
+    <li><b>Quality vs speed.</b> The best music FAD (0.64) needs the 100-step TrigFlow head, which is not real time.</li>
+    <li><b>The head depends on scale.</b> At ~300M, 1-step consistency was clearly worse than 1-step LSD.</li>
+    <li><b>Music VAE.</b> It needs at least 96 dimensions to match a 32-level RVQ codec, and has no semantic distillation yet.</li>
+  </ul>
+</section>
+
+<footer>Written October 2026 from arXiv v3 of 2509.06926. Borrowed components are attributed where they appear. Toy figures are illustrations; numbers are the paper's.</footer>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const redraws=[];
+const fireAll=()=>redraws.forEach(f=>f());
+try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fireAll);}catch(e){}
+new MutationObserver(fireAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+function segBind(btns,on){btns.forEach(b=>b.addEventListener('click',()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));on(b);}));}
+const SUP='⁰¹²³⁴⁵⁶⁷⁸⁹';
+const sup=n=>String(n).split('').map(c=>SUP[+c]).join('');
+
+/* ---------- nav highlight ---------- */
+const links=[...document.querySelectorAll('nav.index a')];
+const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+function navUpdate(){let cur=0;secs.forEach((s,i)=>{if(s&&s.getBoundingClientRect().top<120)cur=i;});links.forEach((a,i)=>a.classList.toggle('on',i===cur));}
+window.addEventListener('scroll',navUpdate,{passive:true});navUpdate();
+
+/* ---------- RVQ: residual levels ---------- */
+(function(){
+  const wrap=$('#rvWrap'),read=$('#rvRead');
+  const MAXL=8;let target=[0.83,-0.41],L=1,anim=1,raf=null,lastNar=null;
+  function quant(){
+    const rec=[[0,0]],picks=[];
+    for(let k=1;k<=MAXL;k++){
+      const a=1/Math.pow(2,k-1),p=rec[k-1];let bd=1e9,bq=null,bj=0;
+      for(let j=0;j<9;j++){const q=[p[0]+(j%3-1)*a,p[1]+(1-Math.floor(j/3))*a];const d=Math.hypot(target[0]-q[0],target[1]-q[1]);if(d<bd){bd=d;bq=q;bj=j;}}
+      rec.push(bq);picks.push({j:bj,err:bd});
+    }
+    return{rec,picks};
+  }
+  function draw(){
+    const W=wrap.clientWidth;if(!W)return;
+    const nar=W<560;lastNar=nar;
+    const VW=nar?360:640,VH=nar?592:300,U0=78,cx=nar?180:154,cy=nar?150:148;
+    const {rec,picks}=quant();const n0=Math.hypot(target[0],target[1]);
+    const zf=L>1?Math.min(1,anim*2):1, gr=L>1?Math.max(0,anim*2-1):anim;
+    const zl=L>1?(L-2)+zf:0, U=U0*Math.pow(2,zl);
+    const c0=L>1?rec[L-2]:rec[0], c1=rec[L-1];
+    const ctr=[c0[0]+(c1[0]-c0[0])*zf,c0[1]+(c1[1]-c0[1])*zf];
+    const P=p=>[cx+(p[0]-ctr[0])*U,cy-(p[1]-ctr[1])*U];
+    wrap.innerHTML='';
+    const s=el('svg',{viewBox:`0 0 ${VW} ${VH}`,class:'rv',role:'img','aria-label':'Residual vector quantization of one frame, level by level'},wrap);
+    const defs=el('defs',{},s);
+    const mk=el('marker',{id:'rvA',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:6,markerHeight:6,orient:'auto'},defs);el('path',{d:'M0 0L10 5L0 10z',class:'mk'},mk);
+    el('rect',{x:cx-146,y:cy-140,width:292,height:280},el('clipPath',{id:'rvC'},defs));
+    el('rect',{x:cx-146,y:cy-140,width:292,height:280,rx:8,class:'pl'},s);
+    const g=el('g',{'clip-path':'url(#rvC)'},s);
+    const O=P([0,0]);
+    el('line',{x1:cx-146,x2:cx+146,y1:O[1],y2:O[1],class:'axl'},g);el('line',{x1:O[0],x2:O[0],y1:cy-140,y2:cy+140,class:'axl'},g);
+    const a=1/Math.pow(2,L-1),p=rec[L-1];
+    for(let j=0;j<9;j++){const q=P([p[0]+(j%3-1)*a,p[1]+(1-Math.floor(j/3))*a]);el('circle',{cx:q[0],cy:q[1],r:3.4,class:j===picks[L-1].j&&gr>=1?'cwS':'cw'},g);}
+    for(let k=1;k<=L;k++){
+      const A=P(rec[k-1]);let B=P(rec[k]);
+      if(k===L)B=[A[0]+(B[0]-A[0])*gr,A[1]+(B[1]-A[1])*gr];
+      const len=Math.hypot(B[0]-A[0],B[1]-A[1]);if(len<1)continue;
+      const at={x1:A[0],y1:A[1],x2:B[0],y2:B[1],class:'ch'+(k===L?' cur':'')};if(len>=16)at['marker-end']='url(#rvA)';
+      el('line',at,g);
+    }
+    const R=P(rec[L]),Tg=P(target);
+    if(gr>=1)el('line',{x1:R[0],y1:R[1],x2:Tg[0],y2:Tg[1],class:'res'},g);
+    el('circle',{cx:Tg[0],cy:Tg[1],r:6,class:'tgt'},g);
+    const right=Tg[0]+120<cx+146;
+    el('text',{x:right?Tg[0]+10:Tg[0]-10,y:Tg[1]-10,'text-anchor':right?'start':'end'},g,'encoder output');
+    if(L===1)el('text',{x:O[0]+5,y:O[1]+13},g,'0');
+    el('text',{x:cx-138,y:cy-124,class:'hd'},s,'zoom ×'+Math.round(Math.pow(2,zl)));
+    const lx=nar?16:340,ly=nar?320:28;
+    el('text',{x:lx,y:ly,class:'hd'},s,'Tokens of this frame, in order');
+    for(let k=1;k<=MAXL;k++){
+      const y=ly+14+(k-1)*28,on=k<=L&&(k<L||anim>=1||L===1);
+      el('text',{x:lx,y:y+14},s,'level '+k);
+      el('rect',{x:lx+58,y:y,width:46,height:20,rx:4,class:on?'tk':'tkf'},s);
+      if(on)el('text',{x:lx+81,y:y+14,'text-anchor':'middle',class:'tkt'},s,'#'+(picks[k-1].j+1));
+      if(k>1)el('line',{x1:lx+81,x2:lx+81,y1:y-7,y2:y-1,class:'ln'},s);
+      if(on){const e=picks[k-1].err/n0;el('rect',{x:lx+118,y:y+6,width:Math.max(2,e*140),height:8,rx:2,class:'eb'},s);el('text',{x:lx+266,y:y+14},s,Math.round(e*100)+'%');}
+    }
+    el('text',{x:lx,y:ly+14+MAXL*28+6},s,'bar: error left after this level');
+    const e=Math.round(picks[L-1].err/n0*100);
+    read.textContent=L===1?`Level 1 picks the nearest of its 9 codewords. ${e}% of the vector is still missing.`:`Level ${L} picks among 9 codewords placed around the reconstruction of levels 1–${L-1}: it can only be chosen after them. Error left: ${e}%.`+(L===MAXL?' Speech uses 8 levels, music 32.':'');
+    $('#rvNext').disabled=L>=MAXL;
+  }
+  function next(){
+    if(L>=MAXL)return;L++;cancelAnimationFrame(raf);
+    if(reduce){anim=1;draw();return;}
+    anim=0;const t0=performance.now();
+    const tick=now=>{anim=Math.min(1,(now-t0)/450);draw();if(anim<1)raf=requestAnimationFrame(tick);};
+    raf=requestAnimationFrame(tick);
+  }
+  $('#rvNext').addEventListener('click',next);
+  $('#rvReset').addEventListener('click',()=>{cancelAnimationFrame(raf);L=1;anim=1;draw();});
+  $('#rvNew').addEventListener('click',()=>{cancelAnimationFrame(raf);const ang=Math.random()*Math.PI*2,r=.7+Math.random()*.65;target=[r*Math.cos(ang),r*Math.sin(ang)];L=1;anim=1;draw();});
+  L=3;draw();
+  new ResizeObserver(()=>{const nar=wrap.clientWidth<560;if(nar!==lastNar)draw();}).observe(wrap);
+})();
+
+/* ---------- language model: one prediction ---------- */
+(function(){
+  const wrap=$('#lmWrap'),read=$('#lmRead'),act=$('#lmAct');
+  const K=3;let dom='mu',mode='train',s=9,kind={},kv={},busy=false,lastNar=null,timers=[];
+  function resetGen(){s=9;kind={};for(let i=1;i<9;i++)kind[i]=i<=5?'p':'g';}
+  function resampleK(){kv={};for(let i=1;i<400;i++)kv[i]=.06+Math.random()*.9;}
+  resetGen();resampleK();
+  const TXT={
+    'train-mu':'Training. Every frame read by the long-context Transformer gets its own random noise level (bar inside each x̃: from clean to pure noise). The short-context Transformer reads the last frames clean. The head output is compared with the true next frame (amber).',
+    'train-sp':'Training. Speech uses the plain setup: one Transformer, no noise, no short context. The head output is compared with the true next frame (amber).',
+    'gen-mu':'Generation. Blue: prompt frames. Rose: frames the model generated. No noise is added: the Transformer reads its own frames, errors included, which the noise in training prepared it for.',
+    'gen-sp':'Generation. Blue: prompt frames. Rose: frames the model generated, read back as inputs.'
+  };
+  function build(stage){
+    const W=wrap.clientWidth;if(!W)return;
+    const nar=W<560;lastNar=nar;
+    const VW=nar?380:640,VH=226;
+    const P=nar?5:8,tw=nar?32:36,st=nar?38:44,x0=nar?26:34;
+    const mu=dom==='mu',tr=mode==='train';
+    const first=Math.max(1,s-P),idx=[];for(let i=first;i<s;i++)idx.push(i);
+    const n=idx.length,xe=x0+(n-1)*st+tw;
+    const Yf=118,th=30,cy=Yf+th/2,Yn=76,nh=20,LB=[26,58],YS=176,SH=34;
+    const ox=xe+(nar?26:42),hx=ox+(nar?22:32),hw=nar?50:70,outx=hx+hw+(nar?14:20);
+    wrap.innerHTML='';
+    const svg=el('svg',{viewBox:`0 0 ${VW} ${VH}`,class:'lm',role:'img','aria-label':'Predicting the next frame from the past frames'},wrap);
+    const mk=el('marker',{id:'lmA',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:6,markerHeight:6,orient:'auto'},el('defs',{},svg));el('path',{d:'M0 0L10 5L0 10z',class:'mkk'},mk);
+    const gIn=el('g',{},svg),gMid=el('g',{},svg),gOut=el('g',{},svg);
+    if(stage===1){gMid.classList.add('dim');gOut.classList.add('dim');}
+    if(stage===2){gOut.classList.add('dim');}
+    const noised=mu&&tr;
+    if(first>1)el('text',{x:x0-20,y:cy+4,class:'lb'},gIn,'…');
+    el('rect',{x:6,y:LB[0],width:xe-6,height:LB[1]-LB[0],rx:6,class:'bxL'},gIn);
+    el('text',{x:14,y:LB[0]+20,class:'bl'},gIn,mu?(nar?'long-context Transformer':'long-context Transformer · causal, all past frames'):(nar?'Transformer backbone':'Transformer backbone · causal, all past frames'));
+    idx.forEach((i,j)=>{
+      const x=x0+j*st,xc=x+tw/2;
+      if(noised){
+        el('line',{x1:xc,x2:xc,y1:Yf,y2:Yn+nh,class:'ln'},gIn);
+        el('line',{x1:xc,x2:xc,y1:Yn,y2:LB[1],class:'ln'},gIn);
+        el('rect',{x:x,y:Yn,width:tw,height:nh,rx:3,class:'tN'},gIn);
+        el('rect',{x:x+2,y:Yn+nh-5,width:Math.max(1,(tw-4)*kv[i]),height:3,rx:1,class:'kb'},gIn);
+        el('text',{x:xc,y:Yn+13,'text-anchor':'middle','font-size':'12px'},gIn,'x̃'+sup(i));
+      }else el('line',{x1:xc,x2:xc,y1:Yf,y2:LB[1],class:'ln'},gIn);
+      const gen=!tr&&kind[i]==='g';
+      el('rect',{x:x,y:Yf,width:tw,height:th,rx:4,class:gen?'tP':'tO'},gIn);
+      el('text',{x:xc,y:Yf+20,'text-anchor':'middle'},gIn,(gen?'x̂':'x')+sup(i));
+      if(mu&&j>=n-K)el('line',{x1:xc,x2:xc,y1:Yf+th,y2:YS,class:'ln'},gIn);
+    });
+    if(mu){
+      const sx=x0+(n-K)*st;
+      el('rect',{x:sx,y:YS,width:xe-sx,height:SH,rx:6,class:'bxL'},gIn);
+      el('text',{x:(sx+xe)/2,y:YS+14,'text-anchor':'middle',class:'bl'},gIn,'short-context');
+      el('text',{x:(sx+xe)/2,y:YS+27,'text-anchor':'middle',class:'bl'},gIn,'Transformer');
+    }
+    el('path',{d:`M${xe} 42H${ox}V${mu?cy-10:cy-4}`,class:'pa'},gMid);
+    el('text',{x:xe+5,y:36,class:'lb'},gMid,'z long');
+    if(mu){
+      el('path',{d:`M${xe} ${YS+SH/2}H${ox}V${cy+10}`,class:'pa'},gMid);
+      el('text',{x:xe+5,y:YS+SH/2+15,class:'lb'},gMid,'z short');
+      el('circle',{cx:ox,cy:cy,r:10,class:'sum'},gMid);
+      el('text',{x:ox,y:cy+5,'text-anchor':'middle'},gMid,'+');
+    }else el('circle',{cx:ox,cy:cy,r:4,class:'sum'},gMid);
+    el('text',{x:ox-6,y:cy-14,'font-size':'13px','text-anchor':'end'},gMid,'Z'+sup(s));
+    el('line',{x1:ox+(mu?10:4),x2:hx-2,y1:cy,y2:cy,class:'pa','marker-end':'url(#lmA)'},gMid);
+    el('rect',{x:hx,y:cy-17,width:hw,height:34,rx:6,class:'hd'},gMid);
+    el('text',{x:hx+hw/2,y:cy+5,'text-anchor':'middle','font-style':'italic','font-size':'16px'},gMid,'f');
+    el('text',{x:hx+hw/2,y:cy-24,'text-anchor':'middle',class:'lb'},gMid,nar?'head':'consistency head');
+    el('text',{x:hx+hw/2,y:YS+12,'text-anchor':'middle','font-size':'13px'},gMid,'ε ~ 𝒩(0, τI)');
+    el('line',{x1:hx+hw/2,x2:hx+hw/2,y1:YS-2,y2:cy+19,class:'pa','marker-end':'url(#lmA)'},gMid);
+    el('line',{x1:hx+hw,x2:outx-2,y1:cy,y2:cy,class:'pa','marker-end':'url(#lmA)'},gOut);
+    el('rect',{x:outx,y:Yf,width:tw,height:th,rx:4,class:'tP'},gOut);
+    el('text',{x:outx+tw/2,y:Yf+20,'text-anchor':'middle'},gOut,'x̂'+sup(s));
+    if(tr){
+      el('line',{x1:outx+tw/2,x2:outx+tw/2,y1:Yf+th+2,y2:YS,class:'gl'},gOut);
+      el('rect',{x:outx,y:YS,width:tw,height:28,rx:4,class:'tG'},gOut);
+      el('text',{x:outx+tw/2,y:YS+19,'text-anchor':'middle'},gOut,'x'+sup(s));
+    }
+  }
+  function syncControls(){
+    if(mode==='train'){act.textContent='Resample noise';act.hidden=dom!=='mu';}
+    else{act.textContent='Generate next frame';act.hidden=false;}
+    act.disabled=busy;
+  }
+  function rest(){build(0);read.textContent=TXT[(mode==='train'?'train':'gen')+'-'+dom];syncControls();}
+  function stopAnim(){timers.forEach(clearTimeout);timers=[];busy=false;}
+  function generate(){
+    if(busy)return;
+    if(reduce){kind[s]='g';s++;rest();return;}
+    busy=true;syncControls();
+    const steps=[
+      [1,dom==='mu'?'Step 1 · the long-context Transformer reads all past frames; the short-context one reads the last 3.':'Step 1 · the Transformer reads all past frames.'],
+      [2,'Step 2 · the head turns fresh noise ε into the next frame, conditioned on Z (1 to 4 calls).'],
+      [3,'Step 3 · the new frame is decoded to audio and appended to the sequence.']
+    ];
+    steps.forEach((p,k)=>timers.push(setTimeout(()=>{build(p[0]);read.textContent=p[1];},k*1100)));
+    timers.push(setTimeout(()=>{kind[s]='g';s++;busy=false;rest();},steps.length*1100+300));
+  }
+  act.addEventListener('click',()=>{if(mode==='train'){resampleK();rest();}else generate();});
+  segBind([$('#lmTr'),$('#lmIn')],b=>{stopAnim();mode=b.id==='lmTr'?'train':'gen';resetGen();rest();});
+  segBind([$('#lmMu'),$('#lmSp')],b=>{stopAnim();dom=b.id==='lmMu'?'mu':'sp';resetGen();rest();});
+  rest();
+  new ResizeObserver(()=>{const nar=wrap.clientWidth<560;if(nar!==lastNar&&!busy)rest();}).observe(wrap);
+})();
+
+/* ---------- flow vs consistency toy ---------- */
+(function(){
+  const T=Math.PI/2;
+  const MU=[[1.5,0],[-1.3,1.1]],WT=[.75,.25],S2=.14*.14;
+  function denoise(x,y,t){
+    const c=Math.cos(t),sn=Math.sin(t),v=c*c*S2+sn*sn;let ws=[],mx=-1e9;
+    MU.forEach((m,k)=>{const dx=x-c*m[0],dy=y-c*m[1];const l=Math.log(WT[k])-(dx*dx+dy*dy)/(2*v);ws.push(l);if(l>mx)mx=l;});
+    let Z=0,ex=0,ey=0;
+    MU.forEach((m,k)=>{const w=Math.exp(ws[k]-mx);Z+=w;const g=c*S2/v;ex+=w*(m[0]+g*(x-c*m[0]));ey+=w*(m[1]+g*(y-c*m[1]));});
+    return[ex/Z,ey/Z];
+  }
+  function vel(x,y,t){const c=Math.cos(t),sn=Math.max(Math.sin(t),1e-4);const[ex,ey]=denoise(x,y,t);return[-sn*ex+c*(x-c*ex)/sn,-sn*ey+c*(y-c*ey)/sn];}
+  function rk(x,y,t0,t1,M,rec){const h=(t1-t0)/M;let t=t0;for(let i=0;i<M;i++){const a=vel(x,y,t),b=vel(x+h/2*a[0],y+h/2*a[1],t+h/2),c=vel(x+h/2*b[0],y+h/2*b[1],t+h/2),d=vel(x+h*c[0],y+h*c[1],t+h);x+=h/6*(a[0]+2*b[0]+2*c[0]+d[0]);y+=h/6*(a[1]+2*b[1]+2*c[1]+d[1]);t+=h;if(rec)rec.push([x,y]);}return[x,y];}
+  function eulerPts(n){const X0=PATH[0];let x=X0[0],y=X0[1];const pts=[[x,y]];for(let k=0;k<n;k++){const t0=T*(1-k/n),t1=T*(1-(k+1)/n);const v=vel(x,y,t0);x+=(t1-t0)*v[0];y+=(t1-t0)*v[1];pts.push([x,y]);}return pts;}
+  function gauss(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+  const M=400,ang=220*Math.PI/180;
+  const PATH=[[1.6*Math.cos(ang),1.6*Math.sin(ang)]];rk(PATH[0][0],PATH[0][1],T,0,M,PATH);
+  const END=PATH[M];let PLEN=0;for(let i=1;i<=M;i++)PLEN+=Math.hypot(PATH[i][0]-PATH[i-1][0],PATH[i][1]-PATH[i-1][1]);
+  const at=u=>PATH[Math.round((1-u)*M)];
+  const DATA=[];for(let i=0;i<360;i++){const k=Math.random()<WT[0]?0:1;DATA.push([MU[k][0]+gauss()*.14,MU[k][1]+gauss()*.14]);}
+  const STEPS=[1,2,4,10,25,100],EU={},DEV={};STEPS.forEach(n=>EU[n]=eulerPts(n));
+  const TF={4:28.83,10:4.62,25:.79,100:.64};
+  STEPS.forEach(n=>{let m=0;EU[n].forEach(p=>{let b=1e9;for(let i=0;i<=M;i+=2)b=Math.min(b,Math.hypot(p[0]-PATH[i][0],p[1]-PATH[i][1]));m=Math.max(m,b);});DEV[n]=m/PLEN*100;});
+  let xmin=-2.0,xmax=2.0,ymin=-1.3,ymax=1.55;
+  STEPS.forEach(n=>EU[n].forEach(p=>{xmin=Math.min(xmin,p[0]-.15);xmax=Math.max(xmax,p[0]+.15);ymin=Math.min(ymin,p[1]-.15);ymax=Math.max(ymax,p[1]+.15);}));
+  let mode='flow',steps=2,tpos=1,prog=1,raf=null;
+  const NTR=8,trU=[...Array(NTR+1)].map((_,i)=>i/NTR);
+  const trInit=trU.map(u=>{const p=at(u),t=u*T;return[Math.cos(t)*p[0],Math.cos(t)*p[1]];});
+  let trG=trInit.map(p=>p.slice()),trRound=0,trOn=-1;
+  const cv=$('#cfCv'),ctx=cv.getContext('2d');let W=0,H=0;
+  function size(){const w=Math.floor(cv.parentElement.clientWidth);if(!w)return;const h=Math.round(Math.min(400,Math.max(280,w*(w<540?.85:.45))));const d=window.devicePixelRatio||1;cv.width=w*d;cv.height=h*d;cv.style.height=h+'px';ctx.setTransform(d,0,0,d,0,0);W=w;H=h;draw();}
+  function arrow(a,b,col,dash,width){
+    const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy);if(L<3)return;
+    const ux=dx/L,uy=dy/L,hl=Math.min(9,L*.4);
+    ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=width||1.6;ctx.setLineDash(dash||[]);
+    ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0]-ux*hl*.8,b[1]-uy*hl*.8);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(b[0],b[1]);ctx.lineTo(b[0]-ux*hl-uy*hl*.5,b[1]-uy*hl+ux*hl*.5);ctx.lineTo(b[0]-ux*hl+uy*hl*.5,b[1]-uy*hl-ux*hl*.5);ctx.closePath();ctx.fill();
+  }
+  function draw(){
+    if(!W)return;
+    const ink=css('--ink'),muted=css('--muted'),pred=css('--pred'),goal=css('--goal'),surf=css('--surface');
+    ctx.fillStyle=surf;ctx.fillRect(0,0,W,H);
+    const pad=16,sc=Math.min((W-2*pad)/(xmax-xmin),(H-2*pad)/(ymax-ymin));
+    const ox=(W-sc*(xmax-xmin))/2-xmin*sc,oy=(H-sc*(ymax-ymin))/2+ymax*sc;
+    const P=p=>[ox+p[0]*sc,oy-p[1]*sc];
+    ctx.font='500 11px "IBM Plex Mono",monospace';
+    ctx.fillStyle=goal;ctx.globalAlpha=.3;DATA.forEach(p=>{const q=P(p);ctx.beginPath();ctx.arc(q[0],q[1],1.8,0,7);ctx.fill();});ctx.globalAlpha=1;
+    const dl=P([MU[0][0],MU[0][1]-.38]);ctx.fillStyle=muted;ctx.textAlign='center';ctx.fillText('data',dl[0],dl[1]);ctx.textAlign='left';
+    ctx.strokeStyle=ink;ctx.lineWidth=1.4;ctx.beginPath();PATH.forEach((p,i)=>{const q=P(p);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]);});ctx.stroke();
+    const S=P(PATH[0]),E=P(END);
+    ctx.fillStyle=surf;ctx.strokeStyle=ink;ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(S[0],S[1],5,0,7);ctx.fill();ctx.stroke();
+    ctx.fillStyle=goal;ctx.beginPath();ctx.arc(E[0],E[1],5.5,0,7);ctx.fill();
+    ctx.fillStyle=ink;ctx.fillText('start: noise',S[0]+10,S[1]+4);
+    ctx.fillText('end of the path',E[0]+14,E[1]-6);
+    if(mode==='flow'){
+      const pts=EU[steps].map(P),nS=pts.length-1,f=prog*nS,k=Math.min(nS-1,Math.floor(f)),u=Math.min(1,f-k);
+      ctx.strokeStyle=pred;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
+      for(let j=1;j<=k;j++)ctx.lineTo(pts[j][0],pts[j][1]);
+      const cur=[pts[k][0]+(pts[k+1][0]-pts[k][0])*u,pts[k][1]+(pts[k+1][1]-pts[k][1])*u];ctx.lineTo(cur[0],cur[1]);ctx.stroke();
+      ctx.fillStyle=pred;const dr=steps>25?0:steps>10?2:3;if(dr)for(let j=1;j<=k;j++){ctx.beginPath();ctx.arc(pts[j][0],pts[j][1],dr,0,7);ctx.fill();}
+      ctx.beginPath();ctx.arc(cur[0],cur[1],4.5,0,7);ctx.fill();
+      if(prog>=1&&Math.hypot(cur[0]-E[0],cur[1]-E[1])>10){ctx.strokeStyle=muted;ctx.setLineDash([3,4]);ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(cur[0],cur[1]);ctx.lineTo(E[0],E[1]);ctx.stroke();ctx.setLineDash([]);}
+    }else if(mode==='cm'){
+      [.25,.5,.75,1].forEach(u=>{if(Math.abs(u-tpos)<.04)return;const q=P(at(u));arrow(q,E,pred,[3,4],1);ctx.globalAlpha=1;ctx.fillStyle=surf;ctx.strokeStyle=muted;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(q[0],q[1],3.5,0,7);ctx.fill();ctx.stroke();});
+      const q=P(at(tpos));arrow(q,E,pred,null,2.2);
+      ctx.fillStyle=surf;ctx.strokeStyle=pred;ctx.lineWidth=2;ctx.beginPath();ctx.arc(q[0],q[1],6,0,7);ctx.fill();ctx.stroke();
+    }else{
+      trU.forEach((u,i)=>{
+        if(i===0)return;
+        const q=P(at(u)),g=P(trG[i]),done=i<=trRound;
+        arrow(q,g,pred,done?null:[3,4],i===trOn?2.2:1.3);
+        ctx.fillStyle=surf;ctx.strokeStyle=i===trOn?pred:ink;ctx.lineWidth=i===trOn?2:1.2;ctx.beginPath();ctx.arc(q[0],q[1],i===trOn?6:4,0,7);ctx.fill();ctx.stroke();
+      });
+    }
+  }
+  function readout(){
+    const r=$('#cfRead');
+    if(mode==='flow'){
+      const pts=EU[steps],f=pts[pts.length-1],miss=Math.hypot(f[0]-END[0],f[1]-END[1])/PLEN*100;
+      let t=`${steps} step${steps>1?'s':''} = ${steps} network call${steps>1?'s':''}. `;
+      if(miss>8)t+=`Lands off the end of the path, by ${Math.round(miss)}% of its length: early directions point toward the average of the data, and big steps follow them too long.`;
+      else if(DEV[steps]>2.5)t+=`Lands near the end (miss ${miss.toFixed(1)}%), but still cuts the bend: each step keeps the direction from its start for too long. Smaller steps follow the path better, at one call each.`;
+      else t+=`Follows the path and lands on its end (miss ${miss.toFixed(1)}%). The cost is one call per step.`;
+      if(TF[steps])t+=` Paper, TrigFlow head on music at ${steps} steps: FAD ${TF[steps]}.`;
+      r.textContent=t;
+    }else if(mode==='cm'){
+      r.textContent=`One call from noise level ${(tpos*T).toFixed(2)} (of π/2 ≈ 1.57) lands on the end of the path. Every point of the path maps to the same place, including pure noise, so sampling needs a single call.`;
+    }else{
+      if(trRound===0&&trOn<0)r.textContent='Before training, only the clean end is right, by construction (f returns its input at noise level 0). Other points map to arbitrary places. Press Train.';
+      else if(trRound<NTR)r.textContent='The highlighted point is trained to agree with its neighbour closer to the clean end, which already lands on the end of the path.';
+      else r.textContent='Every point now maps to the end of its path. This agreement, spreading from the clean end, is what the consistency loss enforces.';
+    }
+  }
+  function playFlow(){cancelAnimationFrame(raf);if(reduce){prog=1;draw();return;}const dur=Math.min(2400,600+steps*120),t0=performance.now();const tick=now=>{prog=Math.min(1,(now-t0)/dur);draw();if(prog<1)raf=requestAnimationFrame(tick);};raf=requestAnimationFrame(tick);}
+  function train(){
+    cancelAnimationFrame(raf);trG=trInit.map(p=>p.slice());trRound=0;trOn=-1;
+    if(reduce){trG=trG.map((p,i)=>i?END.slice():p);trRound=NTR;draw();readout();return;}
+    let i=1;
+    const one=()=>{
+      if(i>NTR){trOn=-1;draw();readout();return;}
+      trOn=i;readout();const from=trG[i].slice(),t0=performance.now(),dur=i<3?700:380;
+      const tick=now=>{const u=Math.min(1,(now-t0)/dur);trG[i]=[from[0]+(END[0]-from[0])*u,from[1]+(END[1]-from[1])*u];draw();if(u<1)raf=requestAnimationFrame(tick);else{trRound=i;i++;setTimeout(one,i<4?350:150);}};
+      raf=requestAnimationFrame(tick);
+    };
+    one();
+  }
+  const stepBox=$('#cfSteps');
+  STEPS.forEach(n=>{const b=document.createElement('button');b.textContent=n+(n===1?' step':' steps');b.setAttribute('aria-pressed',n===steps?'true':'false');b.addEventListener('click',()=>{steps=n;[...stepBox.children].forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));readout();playFlow();});stepBox.appendChild(b);});
+  function setMode(m){
+    cancelAnimationFrame(raf);mode=m;
+    stepBox.hidden=m!=='flow';$('#cfTlab').hidden=m!=='cm';$('#cfPlay').hidden=m!=='train';
+    if(m==='train'){trG=trInit.map(p=>p.slice());trRound=0;trOn=-1;}
+    prog=1;draw();readout();
+  }
+  segBind([$('#cfFlow'),$('#cfCm'),$('#cfTr')],b=>setMode(b.id==='cfFlow'?'flow':b.id==='cfCm'?'cm':'train'));
+  $('#cfT').addEventListener('input',e=>{tpos=+e.target.value;draw();readout();});
+  $('#cfPlay').addEventListener('click',train);
+  setMode('flow');
+  new ResizeObserver(size).observe(cv.parentElement);redraws.push(draw);size();
+})();
+
+/* ---------- FAD vs steps chart ---------- */
+(function(){
+  const svg=$('#fadChart');
+  const steps=[1,4,10,25,50,100],rtf=[.56,.68,.92,1.54,2.56,4.55];
+  const cm=[.83,.71,.73,.96,1.46,2.05],tf=[null,28.83,4.62,.79,.74,.64];
+  const L=50,R=118,Tp=16,B=40,VW=640,VH=300,pw=VW-L-R,ph=VH-Tp-B;
+  const lx=v=>L+Math.log10(v)/2*pw;
+  const ly0=Math.log10(.5),ly1=Math.log10(40);
+  const ly=v=>Tp+ph-(Math.log10(v)-ly0)/(ly1-ly0)*ph;
+  el('rect',{x:L,y:Tp,width:lx(10)-L,height:ph,class:'rt'},svg);
+  el('text',{x:L+6,y:Tp+14,class:'tl'},svg,'real time');
+  [0.5,1,2,5,10,30].forEach(v=>{el('line',{x1:L,x2:L+pw,y1:ly(v),y2:ly(v),class:'gr'},svg);el('text',{x:L-8,y:ly(v)+3.5,'text-anchor':'end'},svg,v);});
+  steps.forEach(s=>{el('text',{x:lx(s),y:Tp+ph+16,'text-anchor':'middle'},svg,s);});
+  el('line',{x1:L,x2:L+pw,y1:Tp+ph,y2:Tp+ph,class:'ax'},svg);
+  el('text',{x:L+pw/2,y:VH-6,'text-anchor':'middle'},svg,'head calls per frame');
+  el('text',{x:8,y:Tp+8},svg,'FAD');
+  el('line',{x1:L,x2:L+pw,y1:ly(1.06),y2:ly(1.06),class:'bl'},svg);
+  el('text',{x:L+pw+10,y:ly(1.06)+4,class:'tl'},svg,'32-RVQ model');
+  const path=(arr,cls)=>{let d='';arr.forEach((v,i)=>{if(v==null)return;d+=(d?'L':'M')+lx(steps[i])+' '+ly(v);});el('path',{d,class:cls},svg);};
+  path(tf,'s2');path(cm,'s1');
+  const pts=[];
+  tf.forEach((v,i)=>{if(v!=null){el('circle',{cx:lx(steps[i]),cy:ly(v),r:4.5,class:'d2'},svg);pts.push({s:'TrigFlow head',i,v});}});
+  cm.forEach((v,i)=>{el('circle',{cx:lx(steps[i]),cy:ly(v),r:4.5,class:'d1'},svg);pts.push({s:'Consistency head',i,v});});
+  el('text',{x:L+pw+10,y:ly(2.05)+4,class:'tl'},svg,'Consistency');
+  el('text',{x:L+pw+10,y:ly(.64)+4,class:'tl'},svg,'TrigFlow');
+  const rd=$('#fadRead');
+  function show(p){rd.textContent=`${p.s} · ${steps[p.i]} call${steps[p.i]>1?'s':''} · FAD ${p.v.toFixed(2)} · 30 s of music takes ${(rtf[p.i]*30).toFixed(1)} s`;}
+  pts.forEach(p=>{const h=el('circle',{cx:lx(steps[p.i]),cy:ly(p.v),r:13,class:'hit',tabindex:0},svg);el('title',{},h,`${p.s}, ${steps[p.i]} calls: FAD ${p.v}`);h.addEventListener('mouseenter',()=>show(p));h.addEventListener('click',()=>show(p));h.addEventListener('focus',()=>show(p));});
+  rd.textContent='Consistency beats the RVQ model at 1 to 10 calls; TrigFlow needs 25 or more.';
+})();
+})();
+</script>
+
+</body></html>

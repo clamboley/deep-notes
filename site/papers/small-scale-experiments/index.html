@@ -1,0 +1,739 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Small-Scale Experiments Notes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<style>
+/* Layout: one reading column (~42rem) inside a 58rem wrap; sticky section index.
+   Color encodes role everywhere: blue = measured from training runs, rose = fitted by a model, amber = optimum / best attainable. */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --soft:#E7EBF0; --line:#D3DAE3; --ink:#152030; --muted:#5A6676;
+  --obs:#2F62D6; --pred:#C7306B; --goal:#B88300;
+  --obs-t:#E2EAFA; --pred-t:#F8E2EA; --goal-t:#F5EBD2;
+  --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --f-math:"STIX Two Text","Cambria Math","Times New Roman",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E141B; --surface:#151D27; --soft:#1D2733; --line:#2A3542; --ink:#E3E9F0; --muted:#97A3B2;
+    --obs:#6A90F0; --pred:#E26092; --goal:#C99A22;
+    --obs-t:#1A2945; --pred-t:#3A1B2A; --goal-t:#33290F; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E141B; --surface:#151D27; --soft:#1D2733; --line:#2A3542; --ink:#E3E9F0; --muted:#97A3B2;
+  --obs:#6A90F0; --pred:#E26092; --goal:#C99A22;
+  --obs-t:#1A2945; --pred-t:#3A1B2A; --goal-t:#33290F; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:400 1rem/1.62 var(--f-body);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+a{color:var(--obs);text-underline-offset:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--obs);outline-offset:2px;border-radius:4px}
+.wrap{max-width:58rem;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));padding-block:0 4rem}
+.prose{max-width:42rem}
+p{margin:0 0 .9rem}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+.m{font-family:var(--f-math);font-size:1.12em;white-space:nowrap}
+.m i{font-style:italic}
+.c-obs{color:var(--obs)} .c-pred{color:var(--pred)} .c-goal{color:var(--goal)}
+.mono{font-family:var(--f-mono)}
+
+nav.index{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav.index .in{max-width:58rem;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav.index .in::-webkit-scrollbar{display:none}
+nav.index a{flex:none;font:500 .78rem/1 var(--f-mono);color:var(--muted);text-decoration:none;padding:12px 8px;border-bottom:2px solid transparent;letter-spacing:.02em}
+nav.index a:hover{color:var(--ink)}
+nav.index a.on{color:var(--ink);border-bottom-color:var(--ink)}
+
+header.top{padding-block:3rem 0}
+.meta{font:500 .75rem/1.5 var(--f-mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+h1{font-size:clamp(2.3rem,8.6vw,4.6rem);font-weight:800;font-stretch:118%;letter-spacing:-.02em;line-height:.98;margin:.6rem 0 .7rem}
+.subtitle{font-size:1.15rem;max-width:36rem;margin-bottom:.6rem}
+.authors{font-size:.875rem;color:var(--muted);margin-bottom:1.6rem}
+.thesis{font-size:1.06rem;max-width:42rem}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.85rem;color:var(--muted);margin-top:1rem}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block;flex:none}
+
+.pipe{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr auto 1fr;align-items:stretch;margin-top:2rem}
+.pnode{display:flex;flex-direction:column;gap:4px;padding:12px 12px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);text-decoration:none;min-width:0;transition:border-color .2s,transform .2s}
+a.pnode:hover{border-color:var(--ink);transform:translateY(-2px)}
+.pnode .k{font:500 .7rem/1 var(--f-mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.pnode b{font:700 1rem/1.2 var(--f-display);font-stretch:108%}
+.pnode small{font-size:.8rem;color:var(--muted);line-height:1.4}
+.pnode.data{background:transparent;border-style:dashed}
+.pconn{position:relative;width:26px;align-self:center;height:2px;background:var(--line)}
+.pconn::after{content:"";position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left:7px solid var(--line);border-right:0}
+.pconn i{position:absolute;top:-3px;left:0;width:8px;height:8px;border-radius:50%;background:var(--ink);animation:flow 2.4s linear infinite}
+@keyframes flow{from{left:-2px;opacity:0}15%{opacity:1}85%{opacity:1}to{left:18px;opacity:0}}
+.pside{grid-column:7 / span 1;margin-top:8px;font-size:.78rem;color:var(--muted);padding-left:12px;border-left:2px solid var(--line)}
+.pside a{color:var(--muted)}
+@media (max-width:820px){
+  .pipe{grid-template-columns:1fr}
+  .pconn{width:2px;height:22px;justify-self:center}
+  .pconn::after{right:auto;left:-4px;top:auto;bottom:-1px;border:5px solid transparent;border-top:7px solid var(--line);border-bottom:0}
+  .pconn i{left:-3px;top:0;animation-name:flowv}
+  @keyframes flowv{from{top:-2px;opacity:0}15%{opacity:1}85%{opacity:1}to{top:16px;opacity:0}}
+  .pside{grid-column:auto;margin:6px 0 0 0}
+}
+
+section.stage{padding-top:3.5rem;scroll-margin-top:3rem}
+.eyebrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font:500 .75rem/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.7rem}
+.chip{font:500 .7rem/1 var(--f-mono);letter-spacing:.04em;text-transform:none;padding:4px 7px;border-radius:99px;border:1px solid var(--pred);color:var(--pred)}
+h2{font-size:clamp(1.55rem,4.4vw,2.15rem);font-weight:700;font-stretch:112%;letter-spacing:-.01em;line-height:1.12;margin-bottom:.9rem}
+h3.sub{font-size:1.12rem;font-weight:650;font-stretch:105%;margin:2.2rem 0 .6rem;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+h3.sub .chip{font-family:var(--f-mono);font-weight:500}
+.lede{font-size:1.04rem}
+
+.fig{margin:1.4rem 0 1.6rem;padding:16px;border-radius:10px;background:var(--surface);border:1px solid var(--line);min-width:0}
+.fig .bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:12px}
+.fig figcaption{font-size:.84rem;color:var(--muted);margin-top:12px;max-width:44rem;line-height:1.5}
+.figlead{font-size:.9rem;margin:0 0 12px;max-width:44rem}
+.readout{font:400 .8rem/1.5 var(--f-mono);color:var(--ink);margin-top:10px;min-height:3em;max-width:46rem}
+canvas{display:block;width:100%}
+svg{display:block;max-width:100%;height:auto}
+.only-wide{display:block}.only-narrow{display:none}
+@media (max-width:560px){.only-wide{display:none}.only-narrow{display:block}}
+.lg{display:flex;flex-wrap:wrap;gap:4px 14px;font:400 .72rem/1.3 var(--f-mono);color:var(--muted);margin-top:6px}
+.lg span{display:inline-flex;align-items:center;gap:6px}
+.lg i{display:inline-block;width:14px;height:2px}
+
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;max-width:100%}
+.seg button{font:500 .78rem/1.2 var(--f-body);padding:8px 11px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.btn{font:500 .78rem/1 var(--f-body);padding:8px 12px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--ink)}
+label.sl{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted);flex-wrap:wrap}
+label.sl output{font-family:var(--f-mono);color:var(--ink);min-width:4.5em}
+input[type=range]{accent-color:var(--ink);width:160px}
+
+.eq{margin:1.2rem 0;padding:14px 16px;border-left:3px solid var(--ink);background:var(--surface);border-radius:0 8px 8px 0}
+.eq .row{overflow-x:auto;padding-bottom:2px}
+.eq .lbl{font:500 .7rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:.8rem 0 .3rem}
+.eq .lbl:first-child{margin-top:0}
+.eq p{margin:0;font-size:.94rem;max-width:42rem}
+
+details{margin:1rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+details + details{margin-top:-1rem;border-top:0}
+summary{cursor:pointer;list-style:none;padding:11px 0;font-weight:500;display:flex;gap:10px;align-items:baseline}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:var(--f-mono);color:var(--muted);width:12px;flex:none}
+details[open] summary::before{content:"−"}
+summary .q{font-family:var(--f-mono);font-size:.7rem;color:var(--pred);letter-spacing:.06em;text-transform:uppercase;flex:none}
+details .body{padding:0 0 14px 22px;font-size:.93rem;max-width:44rem}
+details .body p:last-child{margin-bottom:0}
+
+/* noisy-quadratic figure */
+.nq{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:18px;align-items:start}
+@media (max-width:620px){.nq{grid-template-columns:1fr}}
+.nq .pt{font:500 .72rem/1 var(--f-mono);color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+.gm{max-width:360px;margin:0 auto}
+
+/* bars */
+.ab{display:grid;gap:8px}
+.ab .gh{font:500 .72rem/1 var(--f-mono);color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-top:6px}
+.ab .r{display:grid;grid-template-columns:minmax(9rem,14rem) 1fr;gap:12px;align-items:center;font-size:.86rem}
+.ab .r > span{min-width:0;line-height:1.3}
+.ab .b{display:flex;align-items:center;gap:8px;font:500 .78rem/1 var(--f-mono);font-variant-numeric:tabular-nums;min-width:0}
+.ab .b i{display:block;height:10px;border-radius:0 3px 3px 0;background:var(--muted);opacity:.55;flex:none}
+.ab .r.best .b i{background:var(--ink);opacity:1}
+@media (max-width:520px){.ab .r{grid-template-columns:1fr;gap:3px}}
+
+/* assumptions grid */
+.tbl{display:grid;grid-template-columns:1.1fr 1fr 1.1fr;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);margin:1.4rem 0;font-size:.88rem}
+.tbl > div{padding:10px 12px;border-top:1px solid var(--line);min-width:0;line-height:1.45}
+.tbl > .h{border-top:0;font:500 .7rem/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--soft)}
+.tbl > div:nth-child(3n+1):not(.h){font-weight:600}
+@media (max-width:620px){
+  .tbl{grid-template-columns:1fr}
+  .tbl > .h{display:none}
+  .tbl > div{border-top:0;padding:4px 12px}
+  .tbl > div:nth-child(3n+1){border-top:1px solid var(--line);padding-top:12px}
+  .tbl > div:nth-child(3n+1):nth-child(4){border-top:0}
+  .tbl > div:nth-child(3n){padding-bottom:12px}
+  .tbl > div:nth-child(3n+2)::before{content:"Allows: ";color:var(--muted);font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}
+  .tbl > div:nth-child(3n)::before{content:"Checked by: ";color:var(--muted);font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}
+}
+
+/* svg diagram + charts */
+.nb .bx{fill:var(--surface);stroke:var(--ink);stroke-width:1.2}
+.nb .nm{fill:var(--soft);stroke:var(--ink);stroke-width:1.6}
+.nb .ar{stroke:var(--muted);stroke-width:1.3;fill:none}
+.nb .mkm{fill:var(--muted)}
+.nb .pl{fill:var(--surface);stroke:var(--ink);stroke-width:1.2}
+.nb .t1{font-family:var(--f-display);font-size:13px;font-weight:650;fill:var(--ink)}
+.nb .t2{font-family:var(--f-mono);font-size:10.5px;fill:var(--muted)}
+.nb .mth{font-family:var(--f-math);font-size:15px;fill:var(--ink);font-style:italic}
+.nb .hd{font-family:var(--f-mono);font-size:11px;fill:var(--ink);letter-spacing:.04em}
+
+.ch .ax{stroke:var(--line);stroke-width:1}
+.ch .gr{stroke:var(--line);stroke-width:1;opacity:.6}
+.ch text{font-family:var(--f-mono);font-size:10.5px;fill:var(--muted)}
+.ch .tl{fill:var(--ink);font-size:11px}
+.ch .dr{fill:var(--soft)}
+.ch .law{fill:none;stroke:var(--pred);stroke-width:2}
+.ch .law2{fill:none;stroke:var(--pred);stroke-width:2;stroke-dasharray:6 4}
+.ch .flr{stroke:var(--muted);stroke-width:1.1;stroke-dasharray:2 4}
+.ch .pt{fill:var(--obs)}
+.ch .pth{fill:var(--surface);stroke:var(--obs);stroke-width:1.4}
+.ch .cur{stroke:var(--ink);stroke-width:1.2}
+.ch .mk{fill:var(--pred);stroke:var(--surface);stroke-width:2}
+.ch .mk2{fill:var(--surface);stroke:var(--pred);stroke-width:2}
+
+ul.lim{padding-left:1.1rem;display:grid;gap:.6rem;margin:1rem 0}
+ul.lim b{font-weight:600}
+footer{margin-top:3.5rem;padding-top:1rem;border-top:1px solid var(--line);font-size:.8rem;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){
+  .pconn i{animation:none;display:none}
+  *{transition:none!important}
+}
+</style>
+
+<nav class="index" aria-label="Sections"><div class="in">
+  <a href="#top">Overview</a><a href="#bg">Background</a><a href="#tuning">Tuning</a><a href="#surface">Loss surface</a><a href="#method">Methodology</a><a href="#extrap">Extrapolation</a><a href="#case">Case study</a><a href="#limits">Limits</a>
+</div></nav>
+
+<div class="wrap">
+
+<header class="top" id="top">
+  <div class="meta">Paper note · FAIR at Meta, NYU · Aug 2026 · <a href="https://arxiv.org/abs/2608.11859">arXiv 2608.11859</a></div>
+  <h1>Small-Scale Experiments</h1>
+  <p class="subtitle">Small-Scale Experiments: Are We There Yet?</p>
+  <p class="authors">Lourie, Cho, Ullrich, Lotfi</p>
+  <p class="thesis">Scaling laws exist down to 4M parameters, but they only appear on the fully tuned frontier, and small models need hundreds of random-search configurations per scale to reach it. Tuning gets easier as models grow because the hyperparameter loss surface loses effective dimensions. The paper turns this into a methodology (tune thoroughly at small scale, check each assumption with a diagnostic, carry the winner up) and recovers pre-norm's advantage over post-norm from models of 4M to 134M parameters.</p>
+  <div class="legend" aria-label="Color code">
+    <span><i class="sw" style="background:var(--obs)"></i>measured: losses of training runs</span>
+    <span><i class="sw" style="background:var(--pred)"></i>fitted: scaling laws, noisy quadratic curves</span>
+    <span><i class="sw" style="background:var(--goal)"></i>optimum: best attainable loss and the configurations near it</span>
+  </div>
+
+  <div class="pipe" role="list">
+    <a class="pnode data" href="#bg" role="listitem"><span class="k">§2 · Tools</span><b>Background</b><small>BPC, scaling laws, loss ≈ capability, noisy quadratic limit</small></a>
+    <div class="pconn" aria-hidden="true"><i></i></div>
+    <a class="pnode" href="#tuning" role="listitem"><span class="k">§3</span><b>Tuning makes the law</b><small>With enough configurations, laws appear at 4M</small></a>
+    <div class="pconn" aria-hidden="true"><i></i></div>
+    <a class="pnode" href="#surface" role="listitem"><span class="k">§4</span><b>Loss surface</b><small>Effective hyperparameters fall toward 1 with scale</small></a>
+    <div class="pconn" aria-hidden="true"><i></i></div>
+    <a class="pnode" href="#method" role="listitem"><span class="k">§5.1</span><b>Methodology</b><small>Tune small, run diagnostics, carry up</small></a>
+    <div class="pconn" aria-hidden="true"><i></i></div>
+    <a class="pnode" href="#case" role="listitem"><span class="k">§5.3</span><b>Case study</b><small>Pre-norm vs post-norm, 4M to 134M</small></a>
+    <div class="pside">Caveat: <a href="#extrap">far-out extrapolation reduces to a noisy floor</a> (§5.2)</div>
+  </div>
+</header>
+
+<!-- ============ BACKGROUND ============ -->
+<section class="stage" id="bg">
+  <div class="eyebrow">Background · §2</div>
+  <h2>Scaling laws, loss as a proxy, and the noisy quadratic limit</h2>
+  <p class="lede prose">The paper combines three results from the literature. Every loss in it is a validation loss in bits per character (BPC).</p>
+
+  <details>
+    <summary><span class="q">Q</span>What is BPC?</summary>
+    <div class="body">Bits per character: the cross-entropy of the validation text in bits (log base 2), divided by the number of characters instead of tokens. It is the average number of bits the model needs to encode each character; lower is better. Dividing by characters makes models with different tokenizers comparable. The paper gets it by changing the log base of the per-character negative log-likelihood that its training library already reports.</div>
+  </details>
+
+  <h3 class="sub">Scaling laws and compute-optimal training</h3>
+  <p class="prose">A scaling law gives the best attainable loss of a model with <i>p</i> parameters trained on <i>d</i> tokens. Hyperparameters do not appear in it because it describes the fully tuned frontier: each (<i>p</i>, <i>d</i>) is assumed to use its best configuration. Since compute is <i>c</i> = 6<i>pd</i>, the law also says how to split a budget between a larger model and longer training.</p>
+  <div class="eq">
+    <div class="lbl">Scaling law (eq. 3)</div>
+    <div class="row"><span class="m"><span class="c-pred"><i>L</i>(<i>p</i>, <i>d</i>)</span> = <i>ε</i> + <i>ζ</i> ⁄ <i>p<sup>ι</sup></i> + <i>η</i> ⁄ <i>d<sup>κ</sup></i></span></div>
+    <div class="lbl">In words</div>
+    <p>Loss falls as a power law in parameters and in data toward a floor <i>ε</i>, the irreducible error, which no model reaches.</p>
+    <div class="lbl">Compute-optimal allocation (eq. 6)</div>
+    <div class="row"><span class="m"><i>p</i>* ∝ <i>c</i><sup><i>κ</i>/(<i>ι</i>+<i>κ</i>)</sup>,&nbsp;&nbsp; <i>d</i>* ∝ <i>c</i><sup><i>ι</i>/(<i>ι</i>+<i>κ</i>)</sup></span></div>
+    <div class="lbl">In words</div>
+    <p>Minimizing the law at fixed compute gives power laws for the best model size and token count. When <i>ι</i> = <i>κ</i> both grow at the same rate: the Chinchilla result, and the reason a tokens-per-parameter ratio is meaningful.</p>
+  </div>
+
+  <h3 class="sub">Loss stands in for capability when the data is fixed</h3>
+  <p class="prose">Downstream accuracy is hard to predict from scale, since many tasks show emergent, inverse or U-shaped scaling. Mayilvahanan et al. (2025) found a weaker regularity that is enough for research: with the pretraining data held fixed, models that reach the same loss have about the same capabilities, whatever their size or architecture. The data defines a curve of capabilities, the loss picks a point on it, and the scaling law sets the cost of that point. A model family with a better law therefore reaches every capability with less compute, so comparing laws is enough to pick the better model.</p>
+
+  <h3 class="sub">The noisy quadratic limit</h3>
+  <p class="prose">Lourie et al. (2025a) found that near its optimum, a hyperparameter loss surface is close to a quadratic bowl shaped by a few directions, plus normal noise from the random seed. This has a useful consequence for random search. Each sampled configuration gives one validation loss, so the search produces a distribution of losses, and the lower tail of that distribution must follow a known family of curves. Fitting it needs only the losses, never the Hessian.</p>
+  <div class="eq">
+    <div class="lbl">Near the optimum (eq. 1)</div>
+    <div class="row"><span class="m"><span class="c-obs"><i>L</i>(<i>X</i>)</span> ≈ <span class="c-goal"><i>y</i>*</span> + (<i>X</i> − <span class="c-goal"><i>x</i>*</span>)<sup>T</sup> <i>H</i> (<i>X</i> − <span class="c-goal"><i>x</i>*</span>) + <i>E</i>,&nbsp;&nbsp; <i>E</i> ~ 𝒩(0, <i>σ</i>)</span></div>
+    <div class="lbl">In words</div>
+    <p>Around the best configuration <span class="c-goal"><i>x</i>*</span>, the measured loss grows quadratically along the directions that matter, plus seed noise.</p>
+    <div class="lbl">Tail of the random-search scores (eq. 2)</div>
+    <div class="row"><span class="m"><i>P</i>(<span class="c-obs"><i>Y</i></span> ≤ <i>y</i>) ≈ <span class="c-pred"><i>F</i>(<i>y</i>; <i>α</i>, <i>β</i>, <i>γ</i>, <i>σ</i>)</span>&nbsp; as <i>y</i> → <span class="c-goal"><i>y</i>*</span></span></div>
+    <div class="lbl">In words</div>
+    <p>The share of random configurations that score below <i>y</i> follows a fitted curve. <i>α</i> is the best attainable loss, <i>β</i> how tightly scores pack near it, <i>γ</i> the effective number of hyperparameters (the bowl's dimension) and <i>σ</i> the seed noise.</p>
+  </div>
+  <p class="prose">The approximation only holds near the optimum, in the <b>asymptotic regime</b>: all losses below a threshold <i>θ</i>. If the measured tail follows the fitted curve there, the search has reached the optimum's neighbourhood; if not, it probably missed it. This is the first check of the <a href="#d1">case study</a>.</p>
+</section>
+
+<!-- ============ §3 TUNING ============ -->
+<section class="stage" id="tuning">
+  <div class="eyebrow">§3 · Estimating scaling laws</div>
+  <h2>Tuning is what makes the law appear</h2>
+  <p class="lede prose">The paper fits laws on models of 4M to 34M parameters and judges them by how well they predict held-out models of 67M to 268M. Most choices in the recipe only refine the fit. The amount of hyperparameter search decides whether there is a law to fit at all.</p>
+  <p class="prose">How parameters are counted (with or without embeddings, with or without attention FLOPs) barely matters. Taking the best configuration for each parameter–data budget and decaying the learning rate both sharpen an already visible law, while tying the exponents <i>ι</i> = <i>κ</i> gives mixed results. The search budget is different in kind. With 4 or 16 configurations per scale, the best run found at each scale is still far from the frontier, and the scatter of these suboptimal runs hides the law completely. With 64 it appears but extrapolates poorly; with 256 it is accurate.</p>
+
+  <figure class="fig">
+    <div class="ab" role="img" aria-label="Test error of the scaling law for different search budgets and refinements">
+      <div class="gh">Configurations searched per scale</div>
+      <div class="r"><span>4</span><div class="b" data-v="1.30e-2"></div></div>
+      <div class="r"><span>16</span><div class="b" data-v="6.01e-3"></div></div>
+      <div class="r"><span>64</span><div class="b" data-v="2.79e-3"></div></div>
+      <div class="r best"><span>256</span><div class="b" data-v="3.70e-6"></div></div>
+      <div class="gh">Refinements, full sweep</div>
+      <div class="r"><span>Best run per scale</span><div class="b" data-v="2.20e-3"></div></div>
+      <div class="r"><span>+ best config per budget</span><div class="b" data-v="1.09e-3"></div></div>
+      <div class="r"><span>+ learning-rate decay</span><div class="b" data-v="2.15e-5"></div></div>
+      <div class="r"><span>+ tied exponents</span><div class="b" data-v="1.85e-5"></div></div>
+    </div>
+    <figcaption>Squared error of the law's prediction on the held-out 268M model, log scale from 10⁻⁶, lower is better. At 4 and 16 configurations the law is not even visible in the data.</figcaption>
+  </figure>
+
+  <p class="prose">A search of hundreds of configurations per scale sounds expensive, but the laws extend down to 4M parameters, where a model trains in under an hour on one GPU.</p>
+
+  <details>
+    <summary>One sweep, eight token budgets</summary>
+    <div class="body">Each configuration is trained once to 32 tokens per parameter with a warmup-stable-decay schedule. Checkpoints are saved at 1/8, 2/8, …, 8/8 of training, and a learning-rate decay is branched off each one (Hägele et al., 2024). One run therefore gives eight token budgets, each with and without decay, so each scale yields one score distribution per token budget. The two shortest budgets fit the law poorly and are dropped.</div>
+  </details>
+</section>
+
+<!-- ============ §4 LOSS SURFACE ============ -->
+<section class="stage" id="surface">
+  <div class="eyebrow">§4 · The loss surface across scales</div>
+  <h2>Small models are hard to tune because their surface has more dimensions</h2>
+  <p class="lede prose">As parameters and data grow together, a random configuration becomes more likely to land near the optimum: the distribution of random-search scores piles up into a peak at the best loss. The paper traces this to the geometry of the surface: its effective number of hyperparameters <i>γ</i> falls toward 1.</p>
+  <p class="prose"><i>γ</i> is the intrinsic dimension of the bowl at the optimum, estimated by fitting the noisy quadratic to each sweep. A model can have nine nominal hyperparameters and still behave as if only one or two matter. Fewer effective dimensions make tuning easier because good configurations then fill a much larger share of the space.</p>
+
+  <figure class="fig">
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Effective dimension">
+        <button id="gm2" aria-pressed="true">Small model: γ = 2</button><button id="gm1" aria-pressed="false">Large model: γ = 1</button>
+      </div>
+      <label class="sl" for="gmD">tolerance δ <input type="range" id="gmD" min="0.01" max="0.2" step="0.005" value="0.06"><output id="gmDo">0.060</output></label>
+    </div>
+    <p class="figlead">Two hyperparameters, the same 300 random configurations. Amber: configurations whose loss is within δ of the best attainable.</p>
+    <div class="gm"><canvas id="gmCv" aria-label="Region of near-optimal configurations in a two-hyperparameter space"></canvas></div>
+    <div class="readout" id="gmRead"></div>
+    <figcaption>Schematic. In <i>γ</i> effective dimensions, the near-optimal share of the space grows like δ<sup><i>γ</i>/2</sup>. The paper's estimates of <i>γ</i> decrease toward 1 as models grow.</figcaption>
+  </figure>
+
+  <p class="prose">Parameters, more than data, drive <i>γ</i> down. Sensitivity itself only collapses when both grow: more data on a tiny model, or a large model trained briefly, barely narrows the gap between the best run and the 25th-percentile run. The authors also tried to model the whole surface across scales and found no simple model that captures its finer details. The consequence for experiments is a division of labour. The small scale is high-dimensional and unforgiving, so it needs extensive search; at large scale, a configuration tuned cheaply transfers with simple rules.</p>
+</section>
+
+<!-- ============ §5.1 METHODOLOGY ============ -->
+<section class="stage" id="method">
+  <div class="eyebrow">§5.1 · Methodology</div>
+  <h2>Tune small, check every assumption, carry the winner up</h2>
+  <p class="lede prose">The method rests on three findings: loss stands in for capability when the data is fixed, tuned scaling laws exist at tiny scales, and sensitivity to hyperparameters fades with scale. Working at small scale makes it affordable to test each of them instead of assuming it.</p>
+
+  <div class="tbl" role="table" aria-label="Assumptions of the methodology and their checks">
+    <div class="h" role="columnheader">Assumption</div><div class="h" role="columnheader">Allows</div><div class="h" role="columnheader">Checked by</div>
+    <div role="cell">Equal loss, equal capability (data fixed)</div><div role="cell">Comparing models by pretraining loss alone</div><div role="cell">A few downstream tasks that show signal at small scale</div>
+    <div role="cell">Tuned laws exist at small scale</div><div role="cell">Reading off how loss scales from small models</div><div role="cell">The noisy quadratic limit, then extrapolation to a held-out scale</div>
+    <div role="cell">Sensitivity fades with scale</div><div role="cell">Carrying hyperparameters up with simple rules</div><div role="cell">Score distributions across scales</div>
+  </div>
+
+  <p class="prose">A failed check is informative in itself: if the noisy quadratic limit or the scaling law does not emerge, something is likely wrong with the hyperparameters, the model or the implementation. The checks also build a qualitative picture of how the model scales. The paper argues this picture is needed because quantitative extrapolation, even from sound structure, compounds small errors.</p>
+</section>
+
+<!-- ============ §5.2 EXTRAPOLATION ============ -->
+<section class="stage" id="extrap">
+  <div class="eyebrow">§5.2 · Extrapolation <span class="chip">I got stuck here</span></div>
+  <h2>Far from the data, a scaling law reduces to its noisy floor</h2>
+  <p class="lede prose">Small-scale laws extrapolate well across about an order of magnitude. Further out, the prediction is mostly the irreducible error <i>ε</i>, which is the worst-determined parameter of the fit.</p>
+  <p class="prose">In <span class="m"><i>ε</i> + <i>ζ</i>⁄<i>p<sup>ι</sup></i> + <i>η</i>⁄<i>d<sup>κ</sup></i></span>, the two power-law terms shrink as the model grows, so far enough out the predicted loss is almost entirely <i>ε</i>. But <i>ε</i> is estimated from small models whose loss is still far above it: the fit has to guess where the curve flattens without ever seeing it flatten, and several values of <i>ε</i> fit the same points almost equally well. The paper shows this by fitting independent laws on separate samples of 128 runs per scale, from 4M to 34M parameters: they agree near the data and spread apart far from it, as in the figure below.</p>
+
+  <figure class="fig">
+    <div class="bar">
+      <label class="sl" for="epX">predict at <input type="range" id="epX" min="18.5" max="24" step="0.1" value="22"><output id="epXo">10²² FLOPs</output></label>
+    </div>
+    <p class="figlead">Four laws that fit the same measured runs and differ only in their floor <i>ε</i> (dotted).</p>
+    <div id="epWrap"></div>
+    <div class="readout" id="epRead"></div>
+    <figcaption>Schematic: the curves are built to pass through the same points, not fitted. Shaded: the range covered by the runs.</figcaption>
+  </figure>
+
+  <p class="prose">Comparing two models by extrapolation therefore ends up comparing their estimates of <i>ε</i>, which are not reliable until the law begins to saturate. The law is most trustworthy near the data, and that is where the paper makes its comparisons.</p>
+
+  <details>
+    <summary><span class="q">Q</span>Does the noisy ε make Chinchilla-style compute allocation infeasible?</summary>
+    <div class="body"><p>No. At a fixed budget, <i>ε</i> is a constant added to the loss: it changes how low the optimum is, not where it is. The optimality condition (eq. 5) and the allocation (eq. 6) involve only <i>ζ</i>, <i>η</i>, <i>ι</i> and <i>κ</i>. What <i>ε</i> makes unreliable is the predicted loss far out.</p><p>The allocation is exposed to errors in the exponents instead, which compound over orders of magnitude. The Kaplan vs Chinchilla disagreement was of this kind, traced to methodological choices that include scale-dependent tuning (Porian et al., 2024). This answer is reasoning from eqs. 5–6, not a claim of the paper.</p></div>
+  </details>
+</section>
+
+<!-- ============ §5.3 CASE STUDY ============ -->
+<section class="stage" id="case">
+  <div class="eyebrow">§5.3 · Case study</div>
+  <h2>Pre-norm versus post-norm from 4M to 134M parameters</h2>
+  <p class="lede prose">The original Transformer normalized after each residual addition (post-norm). Moving normalization before each sublayer (pre-norm) made training more stable, but the field needed nearly three years and a theoretical analysis (Xiong et al., 2020) to settle that pre-norm is better, an advantage that is largest in deep, expensive models.</p>
+
+  <figure class="fig">
+    <svg class="nb only-wide" style="max-width:600px" viewBox="0 0 540 196" role="img" aria-label="One residual block in pre-norm and post-norm form">
+      <defs><marker id="nbA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" class="mkm"/></marker></defs>
+      <text class="hd" x="8" y="18">PRE-NORM</text>
+      <text class="mth" x="14" y="64">x</text>
+      <line class="ar" x1="26" y1="59" x2="80" y2="59" marker-end="url(#nbA)"/>
+      <rect class="nm" x="82" y="42" width="70" height="34" rx="7"/><text class="t1" x="117" y="64" text-anchor="middle">Norm</text>
+      <line class="ar" x1="152" y1="59" x2="186" y2="59" marker-end="url(#nbA)"/>
+      <rect class="bx" x="188" y="42" width="140" height="34" rx="7"/><text class="t1" x="258" y="64" text-anchor="middle">Attention or MLP</text>
+      <line class="ar" x1="328" y1="59" x2="362" y2="59" marker-end="url(#nbA)"/>
+      <circle class="pl" cx="376" cy="59" r="12"/><text class="t1" x="376" y="64" text-anchor="middle">+</text>
+      <line class="ar" x1="388" y1="59" x2="470" y2="59" marker-end="url(#nbA)"/>
+      <text class="t2" x="478" y="63">next block</text>
+      <path class="ar" d="M40 59V30H376V45" marker-end="url(#nbA)"/>
+      <text class="t2" x="100" y="24">residual: x passes through untouched</text>
+
+      <text class="hd" x="8" y="108">POST-NORM</text>
+      <text class="mth" x="14" y="164">x</text>
+      <line class="ar" x1="26" y1="159" x2="80" y2="159" marker-end="url(#nbA)"/>
+      <rect class="bx" x="82" y="142" width="140" height="34" rx="7"/><text class="t1" x="152" y="164" text-anchor="middle">Attention or MLP</text>
+      <line class="ar" x1="222" y1="159" x2="256" y2="159" marker-end="url(#nbA)"/>
+      <circle class="pl" cx="270" cy="159" r="12"/><text class="t1" x="270" y="164" text-anchor="middle">+</text>
+      <line class="ar" x1="282" y1="159" x2="316" y2="159" marker-end="url(#nbA)"/>
+      <rect class="nm" x="318" y="142" width="70" height="34" rx="7"/><text class="t1" x="353" y="164" text-anchor="middle">Norm</text>
+      <line class="ar" x1="388" y1="159" x2="470" y2="159" marker-end="url(#nbA)"/>
+      <text class="t2" x="478" y="163">next block</text>
+      <path class="ar" d="M40 159V130H270V145" marker-end="url(#nbA)"/>
+      <text class="t2" x="100" y="124">residual is normalized with the output</text>
+    </svg>
+    <svg class="nb only-narrow" viewBox="0 0 360 232" role="img" aria-label="One residual block in pre-norm and post-norm form">
+      <defs><marker id="nbB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" class="mkm"/></marker></defs>
+      <text class="hd" x="90" y="14" text-anchor="middle">PRE-NORM</text>
+      <text class="mth" x="90" y="40" text-anchor="middle">x</text>
+      <line class="ar" x1="90" y1="46" x2="90" y2="62" marker-end="url(#nbB)"/>
+      <rect class="nm" x="55" y="64" width="70" height="30" rx="7"/><text class="t1" x="90" y="84" text-anchor="middle">Norm</text>
+      <line class="ar" x1="90" y1="94" x2="90" y2="110" marker-end="url(#nbB)"/>
+      <rect class="bx" x="18" y="112" width="144" height="30" rx="7"/><text class="t1" x="90" y="132" text-anchor="middle">Attention or MLP</text>
+      <line class="ar" x1="90" y1="142" x2="90" y2="158" marker-end="url(#nbB)"/>
+      <circle class="pl" cx="90" cy="172" r="12"/><text class="t1" x="90" y="177" text-anchor="middle">+</text>
+      <line class="ar" x1="90" y1="184" x2="90" y2="204" marker-end="url(#nbB)"/>
+      <text class="t2" x="90" y="220" text-anchor="middle">next block</text>
+      <path class="ar" d="M90 52H172V172H104" marker-end="url(#nbB)"/>
+      <text class="hd" x="270" y="14" text-anchor="middle">POST-NORM</text>
+      <text class="mth" x="270" y="40" text-anchor="middle">x</text>
+      <line class="ar" x1="270" y1="46" x2="270" y2="62" marker-end="url(#nbB)"/>
+      <rect class="bx" x="198" y="64" width="144" height="30" rx="7"/><text class="t1" x="270" y="84" text-anchor="middle">Attention or MLP</text>
+      <line class="ar" x1="270" y1="94" x2="270" y2="108" marker-end="url(#nbB)"/>
+      <circle class="pl" cx="270" cy="122" r="12"/><text class="t1" x="270" y="127" text-anchor="middle">+</text>
+      <line class="ar" x1="270" y1="134" x2="270" y2="150" marker-end="url(#nbB)"/>
+      <rect class="nm" x="235" y="152" width="70" height="30" rx="7"/><text class="t1" x="270" y="172" text-anchor="middle">Norm</text>
+      <line class="ar" x1="270" y1="182" x2="270" y2="204" marker-end="url(#nbB)"/>
+      <text class="t2" x="270" y="220" text-anchor="middle">next block</text>
+      <path class="ar" d="M270 52H352V122H284" marker-end="url(#nbB)"/>
+    </svg>
+    <figcaption>One residual block. The paper's model is a Llama variant with RMSNorm; post-norm follows Xiong et al. (2020).</figcaption>
+  </figure>
+
+  <p class="prose">The study uses three well-separated scales: 4M and 34M to fit the laws, 134M to validate them. Pre-norm reuses 128 random configurations per scale; post-norm needed more, 511 at 4M, 512 at 34M and 128 at 134M. When parameters and data grow together, compute grows with the square of model size, so a single 1B-parameter run costs as much as 64 runs at 134M or 65,536 at 4M, and the whole study costs about a handful of billion-parameter runs. Each architecture then goes through four diagnostics.</p>
+
+  <h3 class="sub" id="d1">Diagnostic 1 · Is the search tuned? <span class="chip">I got stuck here</span></h3>
+  <p class="prose">For each model size and token budget, the paper plots the share of random-search runs whose validation loss is at most <i>y</i>, zoomed into the best runs, and overlays the fitted noisy quadratic and the asymptotic regime where the fit should hold. If the fitted curve stays within the confidence band of the measured one, the search has reached the optimum's neighbourhood, and the best losses can feed a scaling law. The toy below draws the same plot.</p>
+  <p class="prose">Both architectures pass. What differs is the size of the regime. At 4M, the fit holds over the best 7–8% of pre-norm runs but only the best 3–7% of post-norm runs: good post-norm configurations are rarer. This is the study's first finding, that post-norm is more sensitive to its hyperparameters. The toy below shows the same contrast.</p>
+
+  <figure class="fig">
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Surface">
+        <button id="nqW" aria-pressed="true">Wide regime (like pre-norm)</button><button id="nqN" aria-pressed="false">Narrow regime (like post-norm)</button>
+      </div>
+    </div>
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Configurations" id="nqC"></div>
+      <button class="btn" id="nqR">New search</button>
+    </div>
+    <p class="figlead">Left: random configurations on a toy surface over two hyperparameters (stronger shading is lower loss, dashed line is <i>θ</i>). Right: the lower tail of their losses, drawn the way the paper plots this check.</p>
+    <div class="nq">
+      <div><div class="pt">Hyperparameter space</div><canvas id="nqL" aria-label="Random configurations on a toy loss surface"></canvas></div>
+      <div><div class="pt">Share of runs with loss ≤ y</div><canvas id="nqP" aria-label="Measured and fitted distribution of the best losses"></canvas>
+        <div class="lg"><span><i style="background:var(--obs)"></i>measured</span><span><i style="background:var(--pred)"></i>noisy quadratic</span><span><i style="background:var(--goal)"></i>θ and y* (best loss)</span></div></div>
+    </div>
+    <div class="readout" id="nqRead"></div>
+    <figcaption>Toy surfaces, quadratic near the optimum and flattening further out. The rose curve is the exact distribution of the quadratic part rather than a fit; 128 and 512 are the per-scale counts of the paper's pre-norm and post-norm sweeps.</figcaption>
+  </figure>
+
+  <details>
+    <summary><span class="q">Q</span>In the paper's plots, post-norm looks closer to its fitted curve than pre-norm. Did it need more search to look good?</summary>
+    <div class="body">The quality of the fit is not what differs; its extent is. Matching a thin sliver of the best runs is easier than matching a large part of the distribution, and the post-norm plots only show that sliver. Post-norm was searched more, 511–512 configurations instead of 128, and the paper attributes this to its tuning difficulty: when only the top few percent of runs are near the optimum, many more runs are needed to have enough of them to check the curve.</div>
+  </details>
+
+  <h3 class="sub">Diagnostic 2 · Will scaling up be easy?</h3>
+  <p class="prose">For both architectures, the score distribution moves its mass toward the optimum as models grow, as in §4. Pre-norm grows a clear peak at the optimum; post-norm keeps a second peak at a suboptimal loss, so its tuning stays hard at larger scale.</p>
+
+  <h3 class="sub">Diagnostic 3 · Does loss still track capability?</h3>
+  <p class="prose">On six multiple-choice tasks, including ARC-Easy, which already shows signal at these sizes, pre-norm and post-norm models of all three sizes fall on one common curve of accuracy against loss. Equal loss gives equal capability, so the architecture with the cheaper law is the better model.</p>
+
+  <h3 class="sub">Diagnostic 4 · Do the laws emerge?</h3>
+  <p class="prose">With the best configuration per budget and learning-rate decay, both laws predict the held-out 134M models: pre-norm's very well, post-norm's reasonably, probably limited by its tuning. Because far-out extrapolation mostly reflects <i>ε</i> (§5.2), the laws are fitted two ways: each with its own <i>ε</i> (free) or sharing one (joint). Both versions predict the held-out scale comparably, but they disagree beyond it.</p>
+
+  <figure class="fig">
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Floor">
+        <button id="ppF" aria-pressed="true">Free ε</button><button id="ppJ" aria-pressed="false">Shared ε</button>
+      </div>
+      <label class="sl" for="ppX">compare at <input type="range" id="ppX" min="16" max="24" step="0.1" value="22"><output id="ppXo">10²² FLOPs</output></label>
+    </div>
+    <div id="ppWrap"></div>
+    <div class="readout" id="ppRead"></div>
+    <figcaption>Schematic: shapes chosen to reproduce the paper's qualitative result, not its fitted values. Solid: pre-norm; dashed: post-norm; shaded: the range of the runs.</figcaption>
+  </figure>
+
+  <p class="prose">Over the tested range pre-norm scales better. With free floors, post-norm overtakes beyond that range, but this comparison rests on the unreliable <i>ε</i> estimates. With a shared floor, which assumes both architectures reach the same final loss on the same data, pre-norm stays ahead and its compute advantage grows. Together with post-norm being harder to tune at every step, the small-scale study recovers the large-scale verdict in favour of pre-norm.</p>
+</section>
+
+<!-- ============ LIMITS ============ -->
+<section class="stage" id="limits">
+  <div class="eyebrow">Limitations</div>
+  <h2>Open points</h2>
+  <ul class="lim prose">
+    <li><b>Extrapolation needs judgment.</b> Laws exist at small scale but far-out predictions hit statistical limits, so the paper relies on several diagnostics rather than one test.</li>
+    <li><b>Model-centric research only.</b> Changing the pretraining data breaks the link between loss and capability, so the method does not yet apply to data research.</li>
+    <li><b>Parametrization.</b> The <i>γ</i> results describe standard training; the authors note they might change under μP or similar parametrizations.</li>
+  </ul>
+</section>
+
+<footer>Written October 2026 from arXiv v1 of 2608.11859. The noisy quadratic limit is from Lourie et al. (2025a), the loss–capability correspondence from Mayilvahanan et al. (2025), the law's form from Rosenfeld et al. (2020) and Hoffmann et al. (2022). Toy figures are illustrations; numbers are the paper's.</footer>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const redraws=[];
+const fireAll=()=>redraws.forEach(f=>f());
+try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fireAll);}catch(e){}
+new MutationObserver(fireAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+function segBind(btns,on){btns.forEach(b=>b.addEventListener('click',()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));on(b);}));}
+const SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','.':'·','-':'⁻'};
+const sup=s=>String(s).split('').map(c=>SUP[c]||c).join('');
+const pow10=x=>'10'+sup(Number.isInteger(x)?x:x.toFixed(1));
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(r){let u=0,v=0;while(u===0)u=r();v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function canvasFit(cv,aspect){const W=cv.clientWidth;if(!W)return null;const H=Math.round(W*aspect);const d=window.devicePixelRatio||1;cv.width=Math.round(W*d);cv.height=Math.round(H*d);cv.style.height=H+'px';const ctx=cv.getContext('2d');ctx.setTransform(d,0,0,d,0,0);return{ctx,W,H};}
+function alpha(c,a){const x=document.createElement('canvas').getContext('2d');x.fillStyle=c;const h=x.fillStyle;if(h[0]==='#'){const n=parseInt(h.slice(1),16);return`rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}return h.replace(/rgba?\(([^)]+)\)/,(m,g)=>{const p=g.split(',').slice(0,3);return`rgba(${p.join(',')},${a})`;});}
+
+/* ---------- nav highlight ---------- */
+const links=[...document.querySelectorAll('nav.index a')];
+const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+function navUpdate(){let cur=0;secs.forEach((s,i)=>{if(s&&s.getBoundingClientRect().top<120)cur=i;});links.forEach((a,i)=>a.classList.toggle('on',i===cur));}
+window.addEventListener('scroll',navUpdate,{passive:true});navUpdate();
+
+/* ---------- bars (log scale) ---------- */
+document.querySelectorAll('.ab .b').forEach(b=>{
+  const v=parseFloat(b.dataset.v),lo=-6,hi=-1.5;
+  const w=Math.max(2,(Math.log10(v)-lo)/(hi-lo)*100);
+  const m=v.toExponential(1).split('e');
+  b.innerHTML=`<i style="width:calc(${w.toFixed(1)}% - 4.5em)"></i>${m[0]}×10${sup(+m[1])}`;
+});
+
+/* ---------- γ figure ---------- */
+(function(){
+  const cv=$('#gmCv'),read=$('#gmRead'),sl=$('#gmD'),out=$('#gmDo');
+  let gam=2;const H=[14,7],ROT=0.55,C=[0.5,0.5];
+  const r=rng(7),pts=[];for(let i=0;i<300;i++)pts.push([r(),r()]);
+  function q(u){const d0=u[0]-C[0],d1=u[1]-C[1],c=Math.cos(ROT),s=Math.sin(ROT);const a=c*d0+s*d1,b=-s*d0+c*d1;return H[0]*a*a+(gam===2?H[1]*b*b:0);}
+  function draw(){
+    const f=canvasFit(cv,1);if(!f)return;const{ctx,W}=f;const dl=+sl.value;out.textContent=dl.toFixed(3);
+    const pad=6,S=W-2*pad;ctx.clearRect(0,0,W,W);
+    ctx.fillStyle=css('--soft');ctx.fillRect(pad,pad,S,S);
+    const N=140,cs=S/N;let inside=0;ctx.fillStyle=css('--goal-t');
+    for(let i=0;i<N;i++)for(let j=0;j<N;j++){const u=[(i+.5)/N,(j+.5)/N];if(q(u)<=dl){inside++;ctx.fillRect(pad+i*cs,pad+S-(j+1)*cs,cs+.6,cs+.6);}}
+    // boundary
+    ctx.save();ctx.beginPath();ctx.rect(pad,pad,S,S);ctx.clip();
+    ctx.strokeStyle=css('--goal');ctx.lineWidth=1.6;ctx.beginPath();
+    const c=Math.cos(ROT),s=Math.sin(ROT);
+    if(gam===2){const ra=Math.sqrt(dl/H[0]),rb=Math.sqrt(dl/H[1]);for(let k=0;k<=120;k++){const t=k/120*2*Math.PI,a=ra*Math.cos(t),b=rb*Math.sin(t);const x=C[0]+c*a-s*b,y=C[1]+s*a+c*b;const X=pad+x*S,Y=pad+S-y*S;k?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}}
+    else{const ra=Math.sqrt(dl/H[0]);[-ra,ra].forEach(a=>{const x0=C[0]+c*a-s*(-2),y0=C[1]+s*a+c*(-2),x1=C[0]+c*a-s*2,y1=C[1]+s*a+c*2;ctx.moveTo(pad+x0*S,pad+S-y0*S);ctx.lineTo(pad+x1*S,pad+S-y1*S);});}
+    ctx.stroke();ctx.restore();
+    let n=0;pts.forEach(p=>{const ins=q(p)<=dl;if(ins)n++;ctx.beginPath();ctx.arc(pad+p[0]*S,pad+S-p[1]*S,ins?3.2:2.4,0,2*Math.PI);if(ins){ctx.fillStyle=css('--obs');ctx.fill();}else{ctx.strokeStyle=css('--muted');ctx.lineWidth=1;ctx.globalAlpha=.6;ctx.stroke();ctx.globalAlpha=1;}});
+    // optimum
+    ctx.fillStyle=css('--goal');ctx.beginPath();const ox=pad+C[0]*S,oy=pad+S-C[1]*S;for(let k=0;k<10;k++){const rr=k%2?3:7,t=-Math.PI/2+k*Math.PI/5;const X=ox+rr*Math.cos(t),Y=oy+rr*Math.sin(t);k?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}ctx.closePath();ctx.fill();
+    const pc=Math.round(inside/(N*N)*100);
+    read.textContent=gam===2
+      ?`γ = 2: good configurations form an ellipse covering ${pc}% of the space; ${n} of 300 random configurations land in it. Its share grows in proportion to δ, so it shrinks fast as the tolerance tightens.`
+      :`γ = 1: the loss ignores one direction, so good configurations form a band across the whole space, ${pc}% of it; ${n} of 300 land in it. Its share grows only like √δ and stays large as the tolerance tightens.`;
+  }
+  segBind([$('#gm2'),$('#gm1')],b=>{gam=b.id==='gm2'?2:1;draw();});
+  sl.addEventListener('input',draw);
+  redraws.push(draw);new ResizeObserver(draw).observe(cv);draw();
+})();
+
+/* ---------- noisy quadratic toy ---------- */
+(function(){
+  const cL=$('#nqL'),cP=$('#nqP'),read=$('#nqRead'),cWrap=$('#nqC');
+  const COUNTS=[16,64,128,512];
+  const SURF={
+    wide:{h:[4,1.6],A:0.35,sig:0.008,ymax:0.42},
+    narrow:{h:[10,4],A:0.085,sig:0.006,ymax:0.12}
+  };
+  const U=[0.56,0.44],ROT=0.5,YS=1.0;
+  let key='wide',N=128,seed=11;
+  function qf(u,S){const d0=u[0]-U[0],d1=u[1]-U[1],c=Math.cos(ROT),s=Math.sin(ROT);const a=c*d0+s*d1,b=-s*d0+c*d1;return S.h[0]*a*a+S.h[1]*b*b;}
+  const g=(q,A)=>q/Math.pow(1+Math.pow(q/A,4),.25);
+  // precompute theory and true distributions
+  for(const k in SURF){
+    const S=SURF[k],r=rng(99),M=40000,th=new Float64Array(M),tr=new Float64Array(M);
+    for(let i=0;i<M;i++){const u=[r(),r()],q=qf(u,S),z=gauss(r)*S.sig;th[i]=YS+q+z;tr[i]=YS+g(q,S.A)+z;}
+    th.sort();tr.sort();S.th=th;S.theta=YS+0.6*S.A;
+    let c=0;for(let i=0;i<M;i++)if(tr[i]<=S.theta)c++;S.frac=c/M;
+    S.xlo=YS-2.5*S.sig;S.xhi=tr[Math.floor(S.ymax*M)];
+  }
+  function cdf(arr,x){let lo=0,hi=arr.length;while(lo<hi){const m=(lo+hi)>>1;if(arr[m]<=x)lo=m+1;else hi=m;}return lo/arr.length;}
+  let sample=[];
+  function resample(){const S=SURF[key],r=rng(seed*7919+N);sample=[];for(let i=0;i<N;i++){const u=[r(),r()],q=qf(u,S);sample.push({u,y:YS+g(q,S.A)+gauss(r)*S.sig});}}
+  COUNTS.forEach(n=>{const b=document.createElement('button');b.textContent=n+' configs';b.setAttribute('aria-pressed',n===N?'true':'false');b.dataset.n=n;cWrap.appendChild(b);});
+  segBind([...cWrap.querySelectorAll('button')],b=>{N=+b.dataset.n;resample();draw();});
+  segBind([$('#nqW'),$('#nqN')],b=>{key=b.id==='nqW'?'wide':'narrow';resample();draw();});
+  $('#nqR').addEventListener('click',()=>{seed++;resample();draw();});
+  function drawLeft(){
+    const f=canvasFit(cL,1);if(!f)return;const{ctx,W}=f;const S=SURF[key];
+    const pl=18,pb=18,pt=4,pr=4,w=W-pl-pr,h=W-pt-pb;ctx.clearRect(0,0,W,W);
+    const G=120,off=document.createElement('canvas');off.width=G;off.height=G;const oc=off.getContext('2d'),img=oc.createImageData(G,G);
+    const rgb=alpha(css('--ink'),1).match(/[\d.]+/g).map(Number);
+    for(let i=0;i<G;i++)for(let j=0;j<G;j++){const u=[(i+.5)/G,(j+.5)/G];const v=Math.min(1,g(qf(u,S),S.A)/S.A);const k=((G-1-j)*G+i)*4;img.data[k]=rgb[0];img.data[k+1]=rgb[1];img.data[k+2]=rgb[2];img.data[k+3]=Math.round(255*(.03+.3*Math.pow(1-v,1.5)));}
+    oc.putImageData(img,0,0);ctx.imageSmoothingEnabled=true;ctx.drawImage(off,pl,pt,w,h);
+    // theta contour (quadratic part ≈ g below theta)
+    let qth=0.6*S.A;for(let it=0;it<30;it++)qth=qth*(0.6*S.A)/g(qth,S.A);
+    const c=Math.cos(ROT),s=Math.sin(ROT),ra=Math.sqrt(qth/S.h[0]),rb=Math.sqrt(qth/S.h[1]);
+    ctx.save();ctx.beginPath();ctx.rect(pl,pt,w,h);ctx.clip();
+    ctx.strokeStyle=css('--goal');ctx.lineWidth=1.4;ctx.setLineDash([4,3]);ctx.beginPath();
+    for(let k=0;k<=120;k++){const t=k/120*2*Math.PI,a=ra*Math.cos(t),b=rb*Math.sin(t);const x=U[0]+c*a-s*b,y=U[1]+s*a+c*b;const X=pl+x*w,Y=pt+h-y*h;k?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}
+    ctx.stroke();ctx.setLineDash([]);
+    sample.forEach(p=>{const ins=p.y<=S.theta;ctx.beginPath();ctx.arc(pl+p.u[0]*w,pt+h-p.u[1]*h,ins?3:2.2,0,2*Math.PI);if(ins){ctx.fillStyle=css('--obs');ctx.fill();}else{ctx.strokeStyle=css('--muted');ctx.globalAlpha=.65;ctx.lineWidth=1;ctx.stroke();ctx.globalAlpha=1;}});
+    ctx.restore();
+    ctx.fillStyle=css('--goal');ctx.beginPath();const ox=pl+U[0]*w,oy=pt+h-U[1]*h;for(let k=0;k<10;k++){const rr=k%2?2.6:6,t=-Math.PI/2+k*Math.PI/5;const X=ox+rr*Math.cos(t),Y=oy+rr*Math.sin(t);k?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}ctx.closePath();ctx.fill();
+    ctx.fillStyle=css('--muted');ctx.font='10px "IBM Plex Mono", monospace';ctx.textAlign='center';
+    ctx.fillText('learning rate (log)',pl+w/2,W-4);
+    ctx.save();ctx.translate(11,pt+h/2);ctx.rotate(-Math.PI/2);ctx.fillText('weight decay (log)',0,0);ctx.restore();
+  }
+  function drawRight(){
+    const f=canvasFit(cP,0.72);if(!f)return;const{ctx,W,H}=f;const S=SURF[key];
+    const ml=40,mr=14,mt=10,mb=32,w=W-ml-mr,h=H-mt-mb;ctx.clearRect(0,0,W,H);
+    const X=x=>ml+(x-S.xlo)/(S.xhi-S.xlo)*w,Y=p=>mt+h-p/S.ymax*h;
+    // regime
+    ctx.fillStyle=css('--soft');ctx.fillRect(ml,mt,X(S.theta)-ml,h);
+    ctx.strokeStyle=css('--goal');ctx.setLineDash([4,3]);ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(X(S.theta),mt);ctx.lineTo(X(S.theta),mt+h);ctx.stroke();ctx.setLineDash([]);
+    ctx.font='10px "IBM Plex Mono", monospace';ctx.fillStyle=css('--muted');ctx.textAlign='left';
+    ctx.fillText('asymptotic',ml+5,mt+12);ctx.fillText('regime',ml+5,mt+24);
+    ctx.fillStyle=css('--goal');ctx.fillText('θ',X(S.theta)+4,mt+12);
+    // axes
+    ctx.strokeStyle=css('--line');ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ml,mt);ctx.lineTo(ml,mt+h);ctx.lineTo(ml+w,mt+h);ctx.stroke();
+    ctx.fillStyle=css('--muted');ctx.textAlign='right';
+    [0,S.ymax/2,S.ymax].forEach(p=>{ctx.fillText(p.toFixed(2),ml-5,Y(p)+3);});
+    ctx.textAlign='center';
+    const nt=4;for(let k=0;k<=nt;k++){const x=S.xlo+(S.xhi-S.xlo)*k/nt;ctx.textAlign=k===nt?'right':k===0?'left':'center';ctx.fillText(x.toFixed(key==='wide'?2:3),X(x),mt+h+13);}
+    ctx.textAlign='center';ctx.fillText('validation BPC',ml+w/2,H-3);
+    // optimum marker
+    ctx.fillStyle=css('--goal');ctx.beginPath();ctx.moveTo(X(YS),mt+h-1);ctx.lineTo(X(YS)-5,mt+h-9);ctx.lineTo(X(YS)+5,mt+h-9);ctx.closePath();ctx.fill();
+    ctx.save();ctx.beginPath();ctx.rect(ml,mt-2,w+2,h+2);ctx.clip();
+    // theory
+    ctx.strokeStyle=css('--pred');ctx.lineWidth=2;ctx.beginPath();
+    for(let k=0;k<=200;k++){const x=S.xlo+(S.xhi-S.xlo)*k/200;const p=cdf(S.th,x);k?ctx.lineTo(X(x),Y(p)):ctx.moveTo(X(x),Y(p));}
+    ctx.stroke();
+    // empirical step
+    const ys=sample.map(s=>s.y).sort((a,b)=>a-b);
+    ctx.strokeStyle=css('--obs');ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(X(S.xlo),Y(0));
+    let p=0;for(let i=0;i<ys.length&&ys[i]<=S.xhi;i++){ctx.lineTo(X(ys[i]),Y(p));p=(i+1)/ys.length;ctx.lineTo(X(ys[i]),Y(p));}
+    ctx.lineTo(X(S.xhi),Y(p));ctx.stroke();
+    ctx.fillStyle=css('--obs');p=0;for(let i=0;i<ys.length&&ys[i]<=S.xhi;i++){p=(i+1)/ys.length;ctx.beginPath();ctx.arc(X(ys[i]),Y(p),2.2,0,2*Math.PI);ctx.fill();}
+    ctx.restore();
+    // labels
+    const nin=ys.filter(y=>y<=S.theta).length,pc=Math.round(S.frac*100);
+    let t=`${N} configurations, ${nin} below θ (the regime covers about ${pc}% of the space). `;
+    if(nin<8)t+='Too few runs in the regime to tell whether the tail follows the curve.';
+    else t+='Below θ the measured tail follows the noisy quadratic: the search reached the optimum. Above θ the surface flattens and the two part ways, as expected.';
+    if(key==='narrow'&&N<512)t+=' A narrow regime needs a larger search to check.';
+    read.textContent=t;
+  }
+  function draw(){drawLeft();drawRight();}
+  resample();redraws.push(draw);new ResizeObserver(draw).observe(cP);draw();
+})();
+
+/* ---------- log-compute charts ---------- */
+function lawPts(e,a1,a2,x1,x2){const b=Math.log10((a1-e)/(a2-e))/(x2-x1);return{e,b,x1,L1:a1,f:x=>e+(a1-e)*Math.pow(10,-b*(x-x1)),inv:L=>L<=e?Infinity:x1+Math.log10((a1-e)/(L-e))/b};}
+function axes(svg,o){
+  const{VW,VH,ml,mr,mt,mb,x0,x1,y0,y1,yt}=o,w=VW-ml-mr,h=VH-mt-mb;
+  const X=x=>ml+(x-x0)/(x1-x0)*w,Y=y=>mt+h-(y-y0)/(y1-y0)*h;
+  for(let x=Math.ceil(x0);x<=x1;x+=o.xstep){el('line',{x1:X(x),x2:X(x),y1:mt,y2:mt+h,class:'gr'},svg);el('text',{x:X(x),y:mt+h+15,'text-anchor':'middle'},svg,pow10(x));}
+  yt.forEach(y=>{el('line',{x1:ml,x2:ml+w,y1:Y(y),y2:Y(y),class:'gr'},svg);el('text',{x:ml-6,y:Y(y)+3.5,'text-anchor':'end'},svg,y.toFixed(1));});
+  el('line',{x1:ml,x2:ml,y1:mt,y2:mt+h,class:'ax'},svg);el('line',{x1:ml,x2:ml+w,y1:mt+h,y2:mt+h,class:'ax'},svg);
+  el('text',{x:ml+w/2,y:VH-4,'text-anchor':'middle'},svg,'training compute (FLOPs)');
+  el('text',{x:ml-30,y:mt+h/2,'text-anchor':'middle',transform:`rotate(-90 ${ml-30} ${mt+h/2})`},svg,'BPC');
+  return{X,Y,w,h};
+}
+function path(f,X,Y,a,b){let d='';for(let k=0;k<=160;k++){const x=a+(b-a)*k/160;d+=(k?'L':'M')+X(x).toFixed(1)+' '+Y(f(x)).toFixed(1);}return d;}
+
+/* ---------- ε spread ---------- */
+(function(){
+  const wrap=$('#epWrap'),read=$('#epRead'),sl=$('#epX'),out=$('#epXo');
+  const LAWS=[0.42,0.52,0.62,0.70].map(e=>lawPts(e,1.25,0.95,16,18));
+  const DATA=[];for(let x=15.5;x<=18.51;x+=0.25){const m=LAWS.reduce((s,l)=>s+l.f(x),0)/LAWS.length;DATA.push([x,m+0.012*Math.sin(x*7.3)]);}
+  let lastNar=null;
+  function draw(){
+    const W=wrap.clientWidth;if(!W)return;const nar=W<560;lastNar=nar;
+    const xt=+sl.value;out.textContent=pow10(xt)+' FLOPs';
+    wrap.innerHTML='';const VW=nar?360:640,VH=nar?280:300;
+    const svg=el('svg',{viewBox:`0 0 ${VW} ${VH}`,class:'ch',role:'img','aria-label':'Four scaling laws that agree on the data and diverge far from it'},wrap);
+    const o={VW,VH,ml:46,mr:nar?10:18,mt:12,mb:36,x0:15,x1:24,y0:0.35,y1:1.6,yt:[0.4,0.6,0.8,1.0,1.2,1.4,1.6],xstep:nar?3:1};
+    const{X,Y,h}=axes(svg,o);
+    el('rect',{x:X(15),y:o.mt,width:X(18.6)-X(15),height:h,class:'dr'},svg).parentNode.insertBefore(svg.lastChild,svg.firstChild);
+    LAWS.forEach(l=>{el('line',{x1:X(15),x2:X(24),y1:Y(l.e),y2:Y(l.e),class:'flr'},svg);});
+    LAWS.forEach(l=>{el('path',{d:path(l.f,X,Y,15,24),class:'law'},svg);});
+    DATA.forEach(p=>el('circle',{cx:X(p[0]),cy:Y(p[1]),r:3,class:'pt'},svg));
+    el('line',{x1:X(xt),x2:X(xt),y1:o.mt,y2:o.mt+h,class:'cur'},svg);
+    const pr=LAWS.map(l=>l.f(xt));pr.forEach(v=>el('circle',{cx:X(xt),cy:Y(v),r:4.5,class:'mk'},svg));
+    el('text',{x:X(16.8),y:o.mt+14,'text-anchor':'middle'},svg,'measured');
+    const lo=Math.min(...pr),hi=Math.max(...pr),sh=LAWS.map((l,i)=>l.e/pr[i]*100);
+    const d18=Math.max(...LAWS.map(l=>l.f(18.5)))-Math.min(...LAWS.map(l=>l.f(18.5)));
+    read.textContent=`At ${pow10(xt)} FLOPs the four laws predict ${lo.toFixed(2)} to ${hi.toFixed(2)} BPC, though at the edge of the data they differ by only ${d18.toFixed(3)}. The floor ε makes up ${Math.round(Math.min(...sh))}–${Math.round(Math.max(...sh))}% of each prediction.`;
+  }
+  sl.addEventListener('input',draw);redraws.push(draw);
+  new ResizeObserver(()=>{const nar=wrap.clientWidth<560;if(nar!==lastNar)draw();}).observe(wrap);draw();
+})();
+
+/* ---------- pre vs post ---------- */
+(function(){
+  const wrap=$('#ppWrap'),read=$('#ppRead'),sl=$('#ppX'),out=$('#ppXo');
+  const M={
+    free:{pre:lawPts(0.60,1.55,1.02,15.5,18),post:lawPts(0.40,1.60,1.08,15.5,18)},
+    joint:{pre:lawPts(0.50,1.55,1.02,15.5,18),post:lawPts(0.50,1.60,1.08,15.5,18)}
+  };
+  let mode='free',lastNar=null;
+  function draw(){
+    const W=wrap.clientWidth;if(!W)return;const nar=W<560;lastNar=nar;
+    const xt=+sl.value;out.textContent=pow10(xt)+' FLOPs';
+    const{pre,post}=M[mode];
+    wrap.innerHTML='';const VW=nar?360:640,VH=nar?280:300;
+    const svg=el('svg',{viewBox:`0 0 ${VW} ${VH}`,class:'ch',role:'img','aria-label':'Pre-norm and post-norm scaling laws'},wrap);
+    const o={VW,VH,ml:46,mr:nar?10:18,mt:12,mb:36,x0:15,x1:24,y0:0.35,y1:1.7,yt:[0.4,0.6,0.8,1.0,1.2,1.4,1.6],xstep:nar?3:1};
+    const{X,Y,h}=axes(svg,o);
+    el('rect',{x:X(15),y:o.mt,width:X(18.6)-X(15),height:h,class:'dr'},svg).parentNode.insertBefore(svg.lastChild,svg.firstChild);
+    if(mode==='free'){el('line',{x1:X(15),x2:X(24),y1:Y(pre.e),y2:Y(pre.e),class:'flr'},svg);el('line',{x1:X(15),x2:X(24),y1:Y(post.e),y2:Y(post.e),class:'flr'},svg);}
+    else el('line',{x1:X(15),x2:X(24),y1:Y(pre.e),y2:Y(pre.e),class:'flr'},svg);
+    el('path',{d:path(pre.f,X,Y,15,24),class:'law'},svg);
+    el('path',{d:path(post.f,X,Y,15,24),class:'law2'},svg);
+    for(let x=15.5;x<=18.51;x+=0.5){el('circle',{cx:X(x),cy:Y(pre.f(x)-0.01*Math.sin(x*5)),r:3,class:'pt'},svg);el('circle',{cx:X(x+0.12),cy:Y(post.f(x+0.12)+0.01*Math.cos(x*4)),r:3,class:'pth'},svg);}
+    el('line',{x1:X(xt),x2:X(xt),y1:o.mt,y2:o.mt+h,class:'cur'},svg);
+    const La=pre.f(xt),Lb=post.f(xt);
+    el('circle',{cx:X(xt),cy:Y(La),r:4.5,class:'mk'},svg);el('circle',{cx:X(xt),cy:Y(Lb),r:4.5,class:'mk2'},svg);
+    el('text',{x:X(16.8),y:o.mt+14,'text-anchor':'middle'},svg,'measured');
+    const lab=(L,o2,name)=>{const lower=L.f(24)<o2.f(24);el('text',{x:X(24)-2,y:lower?Y(L.f(24))+17:Y(L.f(nar?21.5:22.6))-9,'text-anchor':'end',class:'tl'},svg,name);};
+    lab(pre,post,'pre-norm');lab(post,pre,'post-norm');
+    const xp=post.inv(La),k=Math.pow(10,xp-xt);
+    const beyond=xt>18.6?' This is beyond the measured range.':'';
+    let t=`At ${pow10(xt)} FLOPs pre-norm reaches ${La.toFixed(2)} BPC; `;
+    if(k>=1)t+=`post-norm needs ${k.toFixed(1)}× the compute to reach the same loss.`;
+    else t+=`post-norm reaches it with ${(1/k).toFixed(1)}× less compute, because its free floor ε is lower.`;
+    read.textContent=t+beyond;
+  }
+  segBind([$('#ppF'),$('#ppJ')],b=>{mode=b.id==='ppF'?'free':'joint';draw();});
+  sl.addEventListener('input',draw);redraws.push(draw);
+  new ResizeObserver(()=>{const nar=wrap.clientWidth<560;if(nar!==lastNar)draw();}).observe(wrap);draw();
+})();
+})();
+</script>
+
+</body></html>

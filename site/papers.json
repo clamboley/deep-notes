@@ -20,5 +20,16 @@
     "coverAlt": "A waveform is encoded by a VAE into one continuous vector per frame, replacing stacked RVQ levels; a language model and consistency head then sample the next vector.",
     "note": "papers/calm/index.html",
     "video": "videos/calm.mp4"
+  },
+  {
+    "slug": "small-scale-experiments",
+    "title": "Small-Scale Experiments",
+    "paperDate": "2026-08-12",
+    "description": "Scaling laws for language models only appear once hyperparameters are tuned to the fully optimized frontier at each scale.",
+    "labels": ["Scaling laws", "Language models", "Hyperparameter tuning"],
+    "cover": "assets/small-scale-experiments-cover.svg",
+    "coverAlt": "A log-log plot of loss against model scale: a wide scatter of tuning runs at small scale narrows toward a fitted scaling-law curve as scale grows, marking the best attainable loss.",
+    "note": "papers/small-scale-experiments/index.html",
+    "video": "videos/small-scale-experiments.mp4"
   }
 ]

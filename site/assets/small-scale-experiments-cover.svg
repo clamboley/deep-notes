@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 490" role="img" aria-labelledby="title desc">
+  <title id="title">Small-Scale Experiments visual summary</title>
+  <desc id="desc">A log-log plot of loss against model scale: a wide scatter of tuning runs at small scale narrows toward a fitted scaling-law curve as scale grows, marking the best attainable loss.</desc>
+  <rect width="760" height="490" fill="#e7ebf0"/>
+  <rect x="23" y="23" width="714" height="444" rx="16" fill="#f8f9fb" stroke="#cbd4df"/>
+  <text x="55" y="76" fill="#5a6676" font-family="monospace" font-size="16" letter-spacing="2">SCALING LAWS  /  TUNING</text>
+  <path d="M54 95H706" stroke="#d3dae3"/>
+
+  <defs><marker id="sseA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8390a0"/></marker></defs>
+
+  <!-- axes -->
+  <path d="M96 378V132" stroke="#8390a0" stroke-width="2" marker-end="url(#sseA)"/>
+  <path d="M96 378H682" stroke="#8390a0" stroke-width="2" marker-end="url(#sseA)"/>
+  <text x="389" y="403" fill="#5a6676" font-family="monospace" font-size="13" text-anchor="middle">parameters (log) &#8594;</text>
+  <text x="40" y="255" fill="#5a6676" font-family="monospace" font-size="13" text-anchor="middle" transform="rotate(-90 40 255)">loss</text>
+
+  <!-- annotations -->
+  <text x="172" y="118" fill="#8390a0" font-family="monospace" font-size="12" text-anchor="middle">small scale, many tries</text>
+  <text x="612" y="118" fill="#8390a0" font-family="monospace" font-size="12" text-anchor="middle">large scale, few tries</text>
+
+  <!-- fitted scaling law -->
+  <path d="M140 150C280 195 440 270 660 355" fill="none" stroke="#c7306b" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- small-scale scatter: wide, many random-search configs -->
+  <g fill="#2f62d6" opacity="0.55">
+    <circle cx="182" cy="160" r="4"/><circle cx="160" cy="168" r="4"/><circle cx="178" cy="172" r="4"/>
+    <circle cx="152" cy="190" r="4"/><circle cx="190" cy="185" r="4"/><circle cx="168" cy="205" r="4"/>
+    <circle cx="182" cy="220" r="4"/><circle cx="158" cy="235" r="4"/><circle cx="195" cy="245" r="4"/>
+    <circle cx="172" cy="260" r="4"/><circle cx="186" cy="278" r="4"/><circle cx="160" cy="290" r="4"/>
+    <circle cx="178" cy="305" r="4"/><circle cx="150" cy="318" r="4"/><circle cx="192" cy="330" r="4"/>
+    <circle cx="168" cy="342" r="4"/>
+  </g>
+
+  <!-- large-scale scatter: tight, already near the frontier -->
+  <g fill="#2f62d6" opacity="0.7">
+    <circle cx="605" cy="350" r="4"/><circle cx="615" cy="345" r="4"/><circle cx="598" cy="358" r="4"/>
+    <circle cx="620" cy="352" r="4"/><circle cx="610" cy="362" r="4"/>
+  </g>
+
+  <!-- optimum markers: best config touching the frontier -->
+  <circle cx="160" cy="168" r="8" fill="none" stroke="#b88300" stroke-width="3"/>
+  <circle cx="615" cy="345" r="6" fill="none" stroke="#b88300" stroke-width="2"/>
+
+  <text x="46" y="440" fill="#2f62d6" font-family="monospace" font-size="16">measured</text>
+  <text x="300" y="440" fill="#c7306b" font-family="monospace" font-size="16">fitted law</text>
+  <text x="540" y="440" fill="#b88300" font-family="monospace" font-size="16">optimum</text>
+</svg>

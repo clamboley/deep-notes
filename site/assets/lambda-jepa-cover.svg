@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 490" role="img" aria-labelledby="title desc">
+  <title id="title">λ-JEPA visual summary</title>
+  <desc id="desc">A backbone representation h that is collapsed onto a line is projected by a nonlinear head into a full-rank cloud z; a spectral regularizer on h spreads the backbone features.</desc>
+  <rect width="760" height="490" fill="#e7ebf0"/>
+  <rect x="23" y="23" width="714" height="444" rx="16" fill="#f8f9fb" stroke="#cbd4df"/>
+  <text x="55" y="76" fill="#5a6676" font-family="monospace" font-size="16" letter-spacing="2">JEPA  /  ANTI-COLLAPSE</text>
+  <path d="M54 95H706" stroke="#d3dae3"/>
+  <defs><marker id="ljA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8390a0"/></marker></defs>
+
+  <!-- backbone h: collapsed onto a line -->
+  <text x="170" y="128" fill="#8390a0" font-family="monospace" font-size="12" text-anchor="middle">backbone h (low rank)</text>
+  <path d="M80 320L260 190" stroke="#2f62d6" stroke-width="2" opacity="0.35"/>
+  <g fill="#2f62d6" opacity="0.7">
+    <circle cx="96" cy="308" r="4"/><circle cx="118" cy="292" r="4"/><circle cx="141" cy="275" r="4"/>
+    <circle cx="160" cy="261" r="4"/><circle cx="182" cy="245" r="4"/><circle cx="203" cy="230" r="4"/>
+    <circle cx="226" cy="213" r="4"/><circle cx="246" cy="199" r="4"/>
+  </g>
+
+  <!-- projector -->
+  <path d="M286 255H440" stroke="#8390a0" stroke-width="2" marker-end="url(#ljA)"/>
+  <text x="363" y="240" fill="#c7306b" font-family="monospace" font-size="14" text-anchor="middle">p(h)</text>
+
+  <!-- projection z: looks full rank -->
+  <text x="565" y="128" fill="#8390a0" font-family="monospace" font-size="12" text-anchor="middle">projection z (looks full rank)</text>
+  <g fill="#c7306b" opacity="0.65">
+    <circle cx="500" cy="190" r="4"/><circle cx="540" cy="205" r="4"/><circle cx="585" cy="188" r="4"/>
+    <circle cx="625" cy="215" r="4"/><circle cx="520" cy="240" r="4"/><circle cx="565" cy="255" r="4"/>
+    <circle cx="610" cy="262" r="4"/><circle cx="655" cy="245" r="4"/><circle cx="505" cy="290" r="4"/>
+    <circle cx="548" cy="305" r="4"/><circle cx="595" cy="300" r="4"/><circle cx="640" cy="310" r="4"/>
+  </g>
+
+  <!-- regularizer target on h -->
+  <ellipse cx="170" cy="380" rx="70" ry="26" fill="none" stroke="#b88300" stroke-width="3" stroke-dasharray="6 5"/>
+  <text x="170" y="426" fill="#b88300" font-family="monospace" font-size="13" text-anchor="middle">log det on h pulls it open</text>
+
+  <text x="46" y="456" fill="#2f62d6" font-family="monospace" font-size="16">backbone</text>
+  <text x="300" y="456" fill="#c7306b" font-family="monospace" font-size="16">head</text>
+  <text x="540" y="456" fill="#b88300" font-family="monospace" font-size="16">target</text>
+</svg>

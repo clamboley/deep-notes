@@ -1,0 +1,686 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>λ-JEPA Notes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<style>
+/* Layout: one reading column (~42rem) inside a 58rem wrap; sticky section index.
+   Color encodes role everywhere: blue = backbone side (encoder W1, representation h),
+   rose = head side (decoder W2, projection z), amber = target the regularizer pulls toward. */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --soft:#E7EBF0; --line:#D3DAE3; --ink:#152030; --muted:#5A6676;
+  --obs:#2F62D6; --pred:#C7306B; --goal:#B88300;
+  --obs-t:#E2EAFA; --pred-t:#F8E2EA; --goal-t:#F5EBD2;
+  --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --f-math:"STIX Two Text","Cambria Math","Times New Roman",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E141B; --surface:#151D27; --soft:#1D2733; --line:#2A3542; --ink:#E3E9F0; --muted:#97A3B2;
+    --obs:#6A90F0; --pred:#E26092; --goal:#C99A22;
+    --obs-t:#1A2945; --pred-t:#3A1B2A; --goal-t:#33290F; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E141B; --surface:#151D27; --soft:#1D2733; --line:#2A3542; --ink:#E3E9F0; --muted:#97A3B2;
+  --obs:#6A90F0; --pred:#E26092; --goal:#C99A22;
+  --obs-t:#1A2945; --pred-t:#3A1B2A; --goal-t:#33290F; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:400 1rem/1.62 var(--f-body);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+a{color:var(--obs);text-underline-offset:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--obs);outline-offset:2px;border-radius:4px}
+.wrap{max-width:58rem;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));padding-block:0 4rem}
+.prose{max-width:42rem}
+p{margin:0 0 .9rem}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+.m{font-family:var(--f-math);font-size:1.12em;white-space:nowrap}
+.m i,i.v{font-family:var(--f-math);font-style:italic}
+.c-obs{color:var(--obs)} .c-pred{color:var(--pred)} .c-goal{color:var(--goal)}
+
+nav.index{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav.index .in{max-width:58rem;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav.index .in::-webkit-scrollbar{display:none}
+nav.index a{flex:none;font:500 .78rem/1 var(--f-mono);color:var(--muted);text-decoration:none;padding:12px 8px;border-bottom:2px solid transparent;letter-spacing:.02em}
+nav.index a:hover{color:var(--ink)}
+nav.index a.on{color:var(--ink);border-bottom-color:var(--ink)}
+
+header.top{padding-block:3rem 0}
+.meta{font:500 .75rem/1.5 var(--f-mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+h1{font-size:clamp(3rem,11vw,5.4rem);font-weight:800;font-stretch:125%;letter-spacing:-.02em;line-height:.95;margin:.6rem 0 .7rem}
+.subtitle{font-size:1.15rem;max-width:36rem;margin-bottom:.6rem}
+.authors{font-size:.875rem;color:var(--muted);margin-bottom:1.6rem}
+.thesis{font-size:1.06rem;max-width:42rem}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.85rem;color:var(--muted);margin-top:1rem}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block;flex:none}
+
+.pipe{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr auto 1fr;align-items:stretch;margin-top:2rem}
+.pnode{display:flex;flex-direction:column;gap:4px;padding:12px 11px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);text-decoration:none;min-width:0;transition:border-color .2s,transform .2s}
+a.pnode:hover{border-color:var(--ink);transform:translateY(-2px)}
+.pnode .k{font:500 .68rem/1 var(--f-mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.pnode b{font:700 .98rem/1.2 var(--f-display);font-stretch:108%}
+.pnode small{font-size:.79rem;color:var(--muted);line-height:1.4}
+.pconn{position:relative;width:26px;align-self:center;height:2px;background:var(--line)}
+.pconn::after{content:"";position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left:7px solid var(--line);border-right:0}
+.pconn i{position:absolute;top:-3px;left:0;width:8px;height:8px;border-radius:50%;background:var(--ink);animation:flow 2.4s linear infinite}
+@keyframes flow{from{left:-2px;opacity:0}15%{opacity:1}85%{opacity:1}to{left:18px;opacity:0}}
+@media (max-width:760px){
+  .pipe{grid-template-columns:1fr}
+  .pconn{width:2px;height:20px;justify-self:center}
+  .pconn::after{right:auto;left:-4px;top:auto;bottom:-1px;border:5px solid transparent;border-top:7px solid var(--line);border-bottom:0}
+  .pconn i{left:-3px;top:0;animation-name:flowv}
+  @keyframes flowv{from{top:-2px;opacity:0}15%{opacity:1}85%{opacity:1}to{top:14px;opacity:0}}
+}
+
+section.stage{padding-top:3.5rem;scroll-margin-top:3rem}
+.eyebrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font:500 .75rem/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.7rem}
+.eyebrow .n{display:inline-grid;place-items:center;width:22px;height:22px;border:1.5px solid var(--ink);border-radius:5px;color:var(--ink);letter-spacing:0}
+.chip{font:500 .7rem/1 var(--f-mono);letter-spacing:.04em;text-transform:none;padding:4px 7px;border-radius:99px;border:1px solid var(--pred);color:var(--pred)}
+h2{font-size:clamp(1.55rem,4.4vw,2.15rem);font-weight:700;font-stretch:112%;letter-spacing:-.01em;line-height:1.12;margin-bottom:.9rem}
+h3.sub{font-size:1.12rem;font-weight:650;font-stretch:105%;margin:2.2rem 0 .6rem}
+.lede{font-size:1.04rem}
+
+.fig{margin:1.4rem 0 1.6rem;padding:16px;border-radius:10px;background:var(--surface);border:1px solid var(--line);min-width:0}
+.fig .bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:12px}
+.fig figcaption{font-size:.84rem;color:var(--muted);margin-top:12px;max-width:44rem;line-height:1.5}
+.figlead{font-size:.9rem;margin:0 0 12px;max-width:44rem}
+.readout{font:400 .8rem/1.5 var(--f-mono);color:var(--ink);margin-top:10px;min-height:3em;max-width:46rem}
+svg{display:block;max-width:100%;height:auto}
+.flegend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:.8rem;color:var(--muted);margin:0 0 8px}
+.flegend span{display:inline-flex;align-items:center;gap:6px}
+
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;max-width:100%}
+.seg button{font:500 .78rem/1.2 var(--f-body);padding:8px 11px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.btn{font:500 .78rem/1 var(--f-body);padding:8px 12px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--ink)}
+label.sl{display:inline-flex;align-items:center;gap:8px;font-size:.82rem;color:var(--muted)}
+label.sl output{font:500 .8rem/1 var(--f-mono);color:var(--ink);min-width:3.4em;font-variant-numeric:tabular-nums}
+input[type=range]{accent-color:var(--ink);width:150px}
+
+.eq{margin:1.2rem 0;padding:14px 16px;border-left:3px solid var(--ink);background:var(--surface);border-radius:0 8px 8px 0;max-width:46rem}
+.eq .row{overflow-x:auto;padding-bottom:2px}
+.eq .lbl{font:500 .7rem/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:.8rem 0 .3rem}
+.eq .lbl:first-child{margin-top:0}
+.eq p{margin:0;font-size:.94rem;max-width:42rem}
+
+details{margin:1rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);max-width:46rem}
+details + details{margin-top:-1rem;border-top:0}
+summary{cursor:pointer;list-style:none;padding:11px 0;font-weight:500;display:flex;gap:10px;align-items:baseline}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:var(--f-mono);color:var(--muted);width:12px;flex:none}
+details[open] summary::before{content:"−"}
+summary .q{font-family:var(--f-mono);font-size:.7rem;color:var(--pred);letter-spacing:.06em;text-transform:uppercase;flex:none}
+details .body{padding:0 0 14px 22px;font-size:.93rem;max-width:44rem}
+details .body p:last-child{margin-bottom:0}
+.mine{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);letter-spacing:.04em}
+
+/* shared svg vocabulary */
+.sv text{font-family:var(--f-mono);font-size:10.5px;fill:var(--muted)}
+.sv .hd{fill:var(--ink);font-size:11px}
+.sv .mth{font-family:var(--f-math);font-size:14px;fill:var(--ink)}
+.sv .t1{font-family:var(--f-display);font-size:13px;font-weight:650;fill:var(--ink)}
+.sv .ax{stroke:var(--line);stroke-width:1}
+.sv .gr{stroke:var(--line);stroke-width:1;opacity:.6}
+.sv .pl{fill:none;stroke:var(--line)}
+.sv .bx{fill:var(--surface);stroke:var(--ink);stroke-width:1.2}
+.sv .ar{stroke:var(--muted);stroke-width:1.3;fill:none}
+.sv .mkm{fill:var(--muted)}
+.sv .pO{fill:var(--obs)} .sv .pP{fill:var(--pred)}
+.sv .oO{fill:var(--surface);stroke:var(--obs);stroke-width:1.4}
+.sv .oP{fill:var(--surface);stroke:var(--pred);stroke-width:1.4}
+.sv .ell{fill:none;stroke:var(--muted);stroke-width:1.3;stroke-dasharray:4 3}
+.sv .goal{stroke:var(--goal);stroke-width:1.6;stroke-dasharray:5 4;fill:none}
+.sv .goalt{fill:var(--goal)}
+.sv .pill{fill:var(--goal-t);stroke:var(--goal);stroke-width:1}
+.sv .pt{fill:var(--ink);font-size:10.5px}
+.sv .bO{fill:var(--obs)} .sv .bP{fill:var(--pred)}
+.sv .cur{fill:none;stroke:var(--ink);stroke-width:1.6;opacity:.75}
+.sv .crv{fill:none;stroke:var(--muted);stroke-width:1.6}
+.sv .dead{fill:var(--ink);font-size:10px}
+.sv .hit{fill:transparent;cursor:pointer}
+.sv .dM{fill:var(--muted)} .sv .dI{fill:var(--ink)}
+.sv .ring{fill:none;stroke:var(--ink);stroke-width:1.5}
+
+/* small h vs z bars */
+.hz{display:grid;gap:10px}
+.hz .r{display:grid;grid-template-columns:5.5rem 1fr;gap:12px;align-items:center;font-size:.86rem}
+.hz .bars{display:grid;gap:3px;min-width:0}
+.hz .b{display:flex;align-items:center;gap:8px;font:500 .76rem/1 var(--f-mono);font-variant-numeric:tabular-nums;color:var(--ink)}
+.hz .b i{display:block;height:9px;border-radius:0 3px 3px 0;min-width:2px}
+.hz .b.h i{background:var(--obs)} .hz .b.z i{background:var(--pred)}
+.hz .b em{font-style:normal;color:var(--muted);width:1.1em}
+
+ul.lim{padding-left:1.1rem;display:grid;gap:.6rem;margin:1rem 0}
+ul.lim b{font-weight:600}
+footer{margin-top:3.5rem;padding-top:1rem;border-top:1px solid var(--line);font-size:.8rem;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){
+  .pconn i{animation:none;display:none}
+  *{transition:none!important}
+}
+</style>
+
+<nav class="index" aria-label="Sections"><div class="in">
+  <a href="#top">Overview</a><a href="#why">Motivation</a><a href="#balance">1 · Layer balance</a><a href="#select">2 · Selecting λ</a><a href="#sacreg">3 · SACReg</a><a href="#ljepa">4 · λ-JEPA</a><a href="#inside">Analysis</a><a href="#results">Results</a><a href="#limits">Limits</a>
+</div></nav>
+
+<div class="wrap">
+
+<header class="top" id="top">
+  <div class="meta">Paper note · ISTA · Sep 2026 (v2) · <a href="https://arxiv.org/abs/2609.35288">arXiv 2609.35288</a> · <a href="https://github.com/berkerdemirel/lambda-jepa">code</a></div>
+  <h1>λ-JEPA</h1>
+  <p class="subtitle">Spectral Anti-Collapse Regularization for Self-Supervised Learning</p>
+  <p class="authors">Demirel*, Dominé*, Maiorca, Fumero, Mondelli, Locatello</p>
+  <p class="thesis">Joint-embedding methods prevent collapse after the projector, but downstream tasks read the backbone, which can stay low rank. In a two-layer linear network, a negative layer balance keeps every encoder direction alive, and weight decay plus a log-determinant on the encoder selects such a balance. The same penalty, applied to the covariance of view-averaged backbone features, brings a JEPA-style method close to DINO and iBOT, with the best linear-probe transfer at 100 epochs.</p>
+  <div class="legend" aria-label="Color code">
+    <span><i class="sw" style="background:var(--obs)"></i>backbone side: encoder <i class="v">W</i>₁, representation <i class="v">h</i></span>
+    <span><i class="sw" style="background:var(--pred)"></i>head side: decoder <i class="v">W</i>₂, projection <i class="v">z</i></span>
+    <span><i class="sw" style="background:var(--goal)"></i>target the regularizer pulls toward</span>
+  </div>
+
+  <div class="pipe" role="list">
+    <a class="pnode" href="#why" role="listitem"><span class="k">Problem</span><b>Low-rank backbone</b><small>Anti-collapse acts on z, probes read h</small></a>
+    <div class="pconn" aria-hidden="true"><i></i></div>
+    <a class="pnode" href="#balance" role="listitem"><span class="k">1 · Linear theory</span><b>Negative balance</b><small>Encoder ≥ decoder + |λ| in every direction</small></a>
+    <div class="pconn" aria-hidden="true"><i></i></div>
+    <a class="pnode" href="#select" role="listitem"><span class="k">2 · Regularizer</span><b>Selecting λ</b><small>Weight decay + log det on the encoder</small></a>
+    <div class="pconn" aria-hidden="true"><i></i></div>
+    <a class="pnode" href="#sacreg" role="listitem"><span class="k">3 · Nonlinear</span><b>SACReg</b><small>Same penalty on the feature covariance</small></a>
+    <div class="pconn" aria-hidden="true"><i></i></div>
+    <a class="pnode" href="#ljepa" role="listitem"><span class="k">4 · Method</span><b>λ-JEPA</b><small>SACReg on view centers at h and z</small></a>
+  </div>
+</header>
+
+<!-- ============ MOTIVATION ============ -->
+<section class="stage" id="why">
+  <div class="eyebrow">Motivation</div>
+  <h2>Anti-collapse in z does not reach the backbone</h2>
+  <p class="lede prose">VICReg, LeJEPA and VISReg apply their anti-collapse term to the projection <i class="v">z</i> = <i class="v">p</i>(<i class="v">h</i>). Linear probes and kNN discard the projector and read the backbone output <i class="v">h</i>. A nonlinear projector can make a low-rank <i class="v">h</i> look full rank, so the term on <i class="v">z</i> is satisfied while <i class="v">h</i> stays collapsed.</p>
+
+  <figure class="fig">
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Projector">
+        <button id="mvLin" aria-pressed="false">Linear projector</button><button id="mvNl" aria-pressed="true">p(h) = (h₁, |h₁|)</button>
+      </div>
+    </div>
+    <p class="figlead">Left: backbone outputs <i class="v">h</i>, all on one line. Right: the projection <i class="v">z</i> of the same points.</p>
+    <div id="mvWrap"></div>
+    <div class="readout" id="mvRead"></div>
+    <figcaption>The paper's footnote example, drawn with <i class="v">h</i>₁ uniform on [−1, 1] instead of {−1, 0, 1}. Dashed: 2σ ellipse of each covariance.</figcaption>
+  </figure>
+
+  <p class="prose">On trained ViTs (Fig. 1), RankMe/<i class="v">d</i>, which is 1 when variance is spread evenly over all directions, is far lower at <i class="v">h</i> than at <i class="v">z</i> for LeJEPA and VISReg. Different images also look alike at <i class="v">h</i>: negative-pair cosine is 0.47 to 0.71 there, against about 0 at <i class="v">z</i>.</p>
+  <figure class="fig">
+    <div class="flegend"><span><i class="sw" style="background:var(--obs)"></i>backbone h</span><span><i class="sw" style="background:var(--pred)"></i>projection z</span></div>
+    <div class="hz" id="hzBars"></div>
+    <figcaption>RankMe/<i class="v">d</i> read from Fig. 1 of the paper.</figcaption>
+  </figure>
+</section>
+
+<!-- ============ 1 LAYER BALANCE ============ -->
+<section class="stage" id="balance">
+  <div class="eyebrow"><span class="n">1</span>Linear theory <span class="chip">I got stuck here</span></div>
+  <h2>Layer balance in a two-layer linear network</h2>
+  <p class="lede prose">The paper borrows a tool from the feature-learning literature. In <i class="v">ŷ</i> = <i class="v">W</i>₂<i class="v">W</i>₁<i class="v">x</i>, the hidden layer <i class="v">h</i> = <i class="v">W</i>₁<i class="v">x</i> plays the backbone and <i class="v">W</i>₂ plays the head. Many factorizations give the same end-to-end map <i class="v">M</i> = <i class="v">W</i>₂<i class="v">W</i>₁, and how the scale is split between the two layers decides whether <i class="v">h</i> can lose directions.</p>
+
+  <h3 class="sub">Background: Gram matrices and the imbalance matrix</h3>
+  <p class="prose">The Gram matrix <span class="m c-obs"><i>W</i>₁<i>W</i>₁<sup>⊤</sup></span> is an <i class="v">N<sub>h</sub></i> × <i class="v">N<sub>h</sub></i> matrix on the hidden space whose entries are dot products between the rows of <i class="v">W</i>₁, the input weights of the hidden units. For a unit direction <i class="v">u</i> of the hidden space, <i class="v">u</i><sup>⊤</sup><i class="v">W</i>₁<i class="v">W</i>₁<sup>⊤</sup><i class="v">u</i> = ‖<i class="v">W</i>₁<sup>⊤</sup><i class="v">u</i>‖² measures how strongly the encoder writes into <i class="v">u</i>, and the eigenvalues are the squared singular values of <i class="v">W</i>₁. The decoder's Gram matrix <span class="m c-pred"><i>W</i>₂<sup>⊤</sup><i>W</i>₂</span> lives on the same space and measures how strongly the decoder reads from each hidden direction.</p>
+
+  <div class="eq">
+    <div class="lbl">Layer imbalance (Def. A.1)</div>
+    <div class="row"><span class="m">Δ = <span class="c-pred"><i>W</i>₂<sup>⊤</sup><i>W</i>₂</span> − <span class="c-obs"><i>W</i>₁<i>W</i>₁<sup>⊤</sup></span>,&nbsp;&nbsp; λ-balanced: Δ = λ <i>I</i></span></div>
+    <div class="lbl">In words</div>
+    <p>Decoder read strength minus encoder write strength, direction by direction. λ-balanced means the gap is the same λ in every direction; λ &lt; 0 means the encoder is the larger layer.</p>
+  </div>
+  <p class="prose">Inserting an invertible <i class="v">A</i> between the layers (<i class="v">W</i>₁ → <i class="v">AW</i>₁, <i class="v">W</i>₂ → <i class="v">W</i>₂<i class="v">A</i>⁻¹) leaves the network's function unchanged but changes Δ. The loss is flat along such moves, and under plain gradient flow Δ stays exactly at its initial value (Lemma A.2). The balance is therefore a property chosen at initialization.</p>
+
+  <h3 class="sub">Why a negative balance prevents collapse</h3>
+  <div class="eq">
+    <div class="lbl">Non-collapse (Lemma A.4), λ &lt; 0</div>
+    <div class="row"><span class="m"><span class="c-obs"><i>W</i>₁<i>W</i>₁<sup>⊤</sup></span> = <span class="c-pred"><i>W</i>₂<sup>⊤</sup><i>W</i>₂</span> + |λ| <i>I</i> ⪰ |λ| <i>I</i>,&nbsp;&nbsp; <span class="c-obs"><i>C<sub>h</sub></i></span> = <i>W</i>₁Σ<sub><i>x</i></sub><i>W</i>₁<sup>⊤</sup> ⪰ κ<sub><i>x</i></sub>|λ| <i>I</i>&nbsp; if Σ<sub><i>x</i></sub> ⪰ κ<sub><i>x</i></sub><i>I</i></span></div>
+    <div class="lbl">In words</div>
+    <p>The decoder's strength is never negative, so with λ &lt; 0 the encoder writes at least |λ| into every hidden direction, even one the decoder ignores. If the inputs vary in every direction, so does <i class="v">h</i>: neither complete nor dimensional collapse is possible.</p>
+  </div>
+
+  <figure class="fig">
+    <div class="bar">
+      <label class="sl">balance λ <input type="range" id="blL" min="-2" max="2" step="0.25" value="-1"><output id="blOut">−1.00</output></label>
+    </div>
+    <p class="figlead">Eight hidden directions of one network with a fixed map <i class="v">M</i>. Each direction shows how much the encoder writes into it and how much the decoder reads from it.</p>
+    <div class="flegend"><span><i class="sw" style="background:var(--obs)"></i>encoder W₁W₁ᵀ</span><span><i class="sw" style="background:var(--pred)"></i>decoder W₂ᵀW₂</span><span><i class="sw" style="background:var(--goal)"></i>floor |λ|</span></div>
+    <div id="blWrap"></div>
+    <div class="readout" id="blRead"></div>
+    <figcaption>Each direction is split as in Theorem A.9 for the chosen λ; the singular values <i class="v">s</i> of <i class="v">M</i> are illustrative, two of them zero. With whitened inputs the blue bar is also the variance of <i class="v">h</i> in that direction.</figcaption>
+  </figure>
+
+  <details>
+    <summary><span class="q">Q</span>With λ &lt; 0, can a few directions be 100× stronger than the rest?</summary>
+    <div class="body"><p>Yes. The balance only sets a floor. A direction that the map uses with singular value <i class="v">s</i> gets <span class="m"><i>a</i>² = (|λ| + √(λ² + 4<i>s</i>²)) / 2</span> (Theorem A.9), which is about <i class="v">s</i> once <i class="v">s</i> ≫ |λ|, so the spectrum of <i class="v">h</i> can stay very uneven above |λ|. The nonlinear regularizer of §3 adds a trace term that also pulls large eigenvalues down.</p></div>
+  </details>
+</section>
+
+<!-- ============ 2 SELECTING LAMBDA ============ -->
+<section class="stage" id="select">
+  <div class="eyebrow"><span class="n">2</span>Regularizer</div>
+  <h2>Weight decay plus a log-determinant selects the balance</h2>
+  <p class="lede prose">A special initialization fixes λ only at the start and does not carry over to deep nonlinear networks. The paper instead looks for a penalty whose minimizers, among all factorizations of the same <i class="v">M</i>, are negatively balanced, and which pulls training toward that balance from any starting point.</p>
+
+  <div class="eq">
+    <div class="lbl">Linear SACReg (Def. 3.2, Theorem 3.1)</div>
+    <div class="row"><span class="m"><i>R</i><sub>LSAC</sub> = λ<sub>reg</sub>⁄2 (‖<span class="c-obs"><i>W</i>₁</span>‖² + ‖<span class="c-pred"><i>W</i>₂</span>‖²) − γ⁄2 · log det(<span class="c-obs"><i>W</i>₁<i>W</i>₁<sup>⊤</sup></span>)</span></div>
+    <div class="lbl">In words</div>
+    <p>Weight decay on both layers controls the overall scale. The log-determinant, on the encoder only, grows without bound as any encoder singular value approaches 0. Among factorizations of a fixed <i class="v">M</i>, the minimizer has Δ = −(γ/λ<sub>reg</sub>) <i class="v">I</i>, a negative balance.</p>
+    <div class="lbl">Dynamics (Theorem A.7)</div>
+    <div class="row"><span class="m">τ Δ̇ = −2λ<sub>reg</sub> (Δ − <span class="c-goal">Δ<sub>⋆</sub></span>),&nbsp;&nbsp; <span class="c-goal">Δ<sub>⋆</sub> = −(γ/λ<sub>reg</sub>) <i>I</i></span></span></div>
+    <div class="lbl">In words</div>
+    <p>Under gradient flow on the task loss plus <i class="v">R</i><sub>LSAC</sub>, the task terms cancel in the equation for Δ. Every eigenvalue of Δ decays exponentially to −γ/λ<sub>reg</sub>: the ratio sets the balance, and λ<sub>reg</sub> alone sets the speed.</p>
+  </div>
+
+  <figure class="fig">
+    <div class="bar">
+      <label class="sl">γ <input type="range" id="dyG" min="0.05" max="0.4" step="0.05" value="0.2"><output id="dyGo">0.20</output></label>
+      <label class="sl">λ<sub>reg</sub> <input type="range" id="dyL" min="0.05" max="0.3" step="0.05" value="0.1"><output id="dyLo">0.10</output></label>
+      <button class="btn" id="dyPlay">Play</button>
+    </div>
+    <p class="figlead">Eigenvalues of the imbalance Δ(<i class="v">t</i>) during training, from seven different starting values.</p>
+    <div id="dyWrap"></div>
+    <div class="readout" id="dyRead"></div>
+    <figcaption>Closed-form solution of Theorem A.7, time in units of τ. In the paper's 8×8 run with (λ<sub>reg</sub>, γ) = (0.1, 0.2), all eigenvalues end in [−2.005, −1.984].</figcaption>
+  </figure>
+
+  <details>
+    <summary><span class="q">Q</span>What does each term do on its own?</summary>
+    <div class="body"><p>Read off the same equation: with γ = 0, weight decay alone drives Δ to 0, the standard balance, which gives no floor. With λ<sub>reg</sub> = 0, τΔ̇ = −2γ<i class="v">I</i>, so Δ decreases forever while the encoder keeps growing. Together they meet at −γ/λ<sub>reg</sub>. To converge faster to the same balance, γ and λ<sub>reg</sub> must be scaled together. <span class="mine">My reading; the paper does not discuss the separate terms.</span></p></div>
+  </details>
+</section>
+
+<!-- ============ 3 SACREG ============ -->
+<section class="stage" id="sacreg">
+  <div class="eyebrow"><span class="n">3</span>SACReg</div>
+  <h2>The same penalty on the feature covariance</h2>
+  <p class="lede prose">In a nonlinear network Δ is not conserved, and the linear guarantee does not carry over (Remark A.17). The paper keeps the encoder-side placement and moves the penalty from the weights to the covariance of the representation, which any encoder has.</p>
+
+  <div class="eq">
+    <div class="lbl">Nonlinear SACReg (eq. 2)</div>
+    <div class="row"><span class="m"><i>R</i><sub>SAC</sub> = λ<sub>mean</sub>⁄2 ‖<span class="c-obs">μ</span>‖² + λ<sub>cov</sub>⁄2 tr(<span class="c-obs"><i>C<sub>h</sub></i></span>) − γ⁄2 · log det(<span class="c-obs"><i>C<sub>h</sub></i></span> + ε<i>I</i>)</span></div>
+    <div class="lbl">In words</div>
+    <p>Computed from the mean μ and covariance <i class="v">C<sub>h</sub></i> of a minibatch of features. The trace limits total variance, the log-determinant penalizes small eigenvalues, and the mean term keeps the features from drifting away, which covariance cannot see. For a linear encoder with whitened inputs, tr <i class="v">C<sub>h</sub></i> = ‖<i class="v">W</i>₁‖² and log det <i class="v">C<sub>h</sub></i> = log det <i class="v">W</i>₁<i class="v">W</i>₁<sup>⊤</sup>, so it reduces exactly to the encoder half of <i class="v">R</i><sub>LSAC</sub> (Lemma A.10).</p>
+    <div class="lbl">Preferred moments (Theorem 3.4)</div>
+    <div class="row"><span class="m">μ<sub>⋆</sub> = 0,&nbsp;&nbsp; <span class="c-goal"><i>C<sub>h</sub></i><sub>⋆</sub> = (γ/λ<sub>cov</sub> − ε)<sub>+</sub> <i>I</i></span></span></div>
+    <div class="lbl">In words</div>
+    <p>On its own, the regularizer prefers centered features with the same variance in every direction. With ε = 0 it diverges as soon as any eigenvalue reaches 0 (Theorem A.15).</p>
+  </div>
+
+  <figure class="fig">
+    <div class="bar">
+      <button class="btn" id="spPlay">Play</button>
+      <button class="btn" id="spStep">Step</button>
+      <button class="btn" id="spReset">Reset</button>
+    </div>
+    <p class="figlead">Each eigenvalue <i class="v">s</i> of <i class="v">C<sub>h</sub></i> pays its own cost ½(<i class="v">s</i> − log <i class="v">s</i>) (Prop. A.12). Left: the cost curve with the current eigenvalues. Right: the same 16 eigenvalues, sorted.</p>
+    <div id="spWrap"></div>
+    <div class="readout" id="spRead"></div>
+    <figcaption>Gradient descent on the regularizer alone, with all weights 1 as in λ-JEPA, from a concentrated spectrum. In training the SSL loss competes, so the spectrum does not end flat.</figcaption>
+  </figure>
+
+  <details>
+    <summary><span class="q">Q</span>Why not just add SIGReg at the backbone too?</summary>
+    <div class="body"><p>The paper tried it (Appendix D): LeJEPA on ImageNet-100 with a second SIGReg on the 512-d encoder output. The Gaussianity statistics at <i class="v">h</i> improve a lot (negative-pair cosine 0.58 → 0.01, diagonal KL 0.96 → 0.07), but the spectrum stays concentrated (RankMe/<i class="v">d</i> 0.07 → 0.09) and accuracy drops (linear probe 60.4 → 58.9, kNN 52.4 → 48.1). SIGReg tests one-dimensional projections against a Gaussian; the log-determinant acts on the covariance spectrum directly.</p></div>
+  </details>
+</section>
+
+<!-- ============ 4 LAMBDA-JEPA ============ -->
+<section class="stage" id="ljepa">
+  <div class="eyebrow"><span class="n">4</span>Method</div>
+  <h2>λ-JEPA: SACReg on view centers, at the backbone and the projection</h2>
+  <p class="lede prose">Each image <i class="v">i</i> gives <i class="v">V</i> augmented views, encoded to <i class="v">h</i> and projected to <i class="v">z</i>. SACReg is applied to the average of the views, the view center <i class="v">h̄<sub>i</sub></i>, so it spreads images apart without asking the views of one image to differ. The invariance loss pulls the views' <i class="v">z</i> together.</p>
+
+  <figure class="fig">
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Backbone term">
+        <button id="ljOff" aria-pressed="false">Without SACReg at h</button><button id="ljOn" aria-pressed="true">With SACReg at h</button>
+      </div>
+    </div>
+    <p class="figlead">Three images, four views each. Open circles are views, filled circles their centers.</p>
+    <div id="ljWrap"></div>
+    <div class="readout" id="ljRead"></div>
+    <figcaption>Schematic after the paper's Fig. 6. The projection looks the same in both states because the projection term already spreads it.</figcaption>
+  </figure>
+
+  <div class="eq">
+    <div class="lbl">SACReg for JE-SSL (Def. 3.5)</div>
+    <div class="row"><span class="m">SACReg(<i>R</i>) = ½ (‖μ<sub><i>R</i></sub>‖² + tr Σ<sub><i>R</i></sub> − log det(Σ<sub><i>R</i></sub> + ε<i>I</i>) − <i>d</i>)</span></div>
+    <div class="lbl">Objective (eq. 3)</div>
+    <div class="row"><span class="m"><i>L</i><sub>λ-JEPA</sub> = <i>L</i><sub>SSL</sub>(<span class="c-pred"><i>Z</i></span>) + β<sub><i>h</i></sub> SACReg(<span class="c-obs"><i>H̄</i></span>) + β<sub><i>z</i></sub> SACReg(<span class="c-pred"><i>Z̄</i></span>),&nbsp;&nbsp; <i>L</i><sub>SSL</sub> ∝ Σ<sub><i>i</i></sub> Σ<sub><i>j</i>&lt;<i>k</i></sub> ‖<span class="c-pred"><i>z<sub>i</sub></i><sup>(<i>j</i>)</sup></span> − <span class="c-pred"><i>z<sub>i</sub></i><sup>(<i>k</i>)</sup></span>‖²</span></div>
+    <div class="lbl">In words</div>
+    <p>All weights inside SACReg are 1, so the preferred covariance is the identity and the −<i class="v">d</i> makes the minimum 0. <i class="v">H̄</i> and <i class="v">Z̄</i> are the batch's view centers. The SSL loss only asks views of one image to agree; it has no negatives and no anti-collapse term of its own (App. B). When the backbone term is added to another method, that method's own loss is kept and only β<sub><i>h</i></sub> SACReg(<i class="v">H̄</i>) is added.</p>
+  </div>
+
+  <p class="prose"><b>Making the log-determinant usable.</b> <i class="v">B</i> view centers give a covariance of rank at most <i class="v">B</i> − 1, so when the feature dimension <i class="v">d</i> reaches the batch size the log-determinant is degenerate. Each step, the centers are projected onto a fresh random orthonormal slice of <i class="v">d</i>′ dimensions (a third of the width at the backbone, 128 after the projector) and SACReg is computed there. Averaged over slices, the objective keeps the same unique minimizer and approaches the full one as <i class="v">d</i>′ grows (Prop. B.1). A ring buffer of detached centers from previous steps keeps four centers per slice dimension, and only the current batch receives gradients.</p>
+
+  <details>
+    <summary>Loss weights</summary>
+    <div class="body"><p>Set by gradient share rather than by tuning: each weight is chosen so that its term gets a target fraction of the total backbone-gradient norm, measured on a pilot run. For λ-JEPA the fractions are 0.44 for invariance, 0.54 for the projection term and 0.02 for the backbone term; when the backbone term is added to another method it gets 0.06. Only DINO's weight was tuned by hand.</p></div>
+  </details>
+  <details>
+    <summary><span class="q">Q</span>Does it work with gradient accumulation?</summary>
+    <div class="body"><p>Not naively, as with SIGReg: the log-determinant couples the whole batch, and a micro-batch of 8 centers cannot estimate a 128-d covariance. The ring buffer is part of the answer, since during accumulation the earlier micro-batches' centers come from the same weights. For exact gradients, the GradCache trick (Gao et al., 2021) computes all centers without gradients, takes ∂<i class="v">L</i>/∂center on the full set, then re-runs each micro-batch and backpropagates those cached gradients, for one extra forward pass. Each image's views stay in one micro-batch, and the slice is shared across micro-batches. <span class="mine">My reasoning, not in the paper.</span></p></div>
+  </details>
+  <details>
+    <summary><span class="q">Q</span>Does it cost more than LeJEPA?</summary>
+    <div class="body"><p>The paper reports no throughput. The regularizer itself (a QR, a covariance of at most 256 × 256 and a log-determinant per step) is negligible next to the ViT, so cost differences come from the view recipe, which is independent of the loss. Comparisons in the paper are matched in epochs, not compute. <span class="mine">My estimate.</span></p></div>
+  </details>
+</section>
+
+<!-- ============ ANALYSIS ============ -->
+<section class="stage" id="inside">
+  <div class="eyebrow">Analysis</div>
+  <h2>What the extra directions contain</h2>
+  <p class="lede prose">On ImageNet-100, the backbone term was added to six methods (LeJEPA, VICReg, VISReg, SimCLR, DINO, BYOL) with their losses unchanged. Backbone RankMe rose for every method, negative-pair cosine moved toward 0, and kNN accuracy improved for all six, while the statistics of the projection barely changed (Fig. 2, 7).</p>
+  <p class="prose">Positive pairs also became less similar, so the gains do not come from more invariance. To see where they come from, the paper splits the backbone covariance into variation between images and variation across views of one image.</p>
+
+  <div class="eq">
+    <div class="lbl">Augmentation thickness (eq. 41, 42)</div>
+    <div class="row"><span class="m"><i>C<sub>h</sub></i> = <i>B<sub>h</sub></i> + <i>A<sub>h</sub></i>,&nbsp; <i>B<sub>h</sub></i> = Cov(𝔼[<i>h</i> | <i>Q</i>]),&nbsp; <i>A<sub>h</sub></i> = 𝔼[Cov(<i>h</i> | <i>Q</i>)],&nbsp; Θ<sub><i>h</i></sub> = <i>B<sub>h</sub></i><sup>†/2</sup> <i>A<sub>h</sub></i> <i>B<sub>h</sub></i><sup>†/2</sup></span></div>
+    <div class="lbl">In words</div>
+    <p><i class="v">Q</i> is a source image. <i class="v">B<sub>h</sub></i> is the spread of image centers, <i class="v">A<sub>h</sub></i> the spread of views around their center, and Θ<sub><i>h</i></sub> the second measured in units of the first.</p>
+    <div class="lbl">Error from one view (eq. 49)</div>
+    <div class="row"><span class="m">min<sub><i>u</i></sub> 𝔼(<span class="c-goal"><i>y</i></span> − <i>u</i><sup>⊤</sup><i>h</i>)² = <i>d<sub>h</sub></i>(<span class="c-goal"><i>y</i></span>)² + <i>a</i><sup>⊤</sup>Θ<sub><i>h</i></sub>(<i>I</i> + Θ<sub><i>h</i></sub>)⁻¹<i>a</i></span></div>
+    <div class="lbl">In words</div>
+    <p>Predicting a class indicator <i class="v">y</i> linearly from a single view costs two terms: how badly the image centers predict it (class-center separability is 1 − <i class="v">d<sub>h</sub></i>²) and a view-sensitivity term that grows with thickness along the class direction <i class="v">a</i>. Too little thickness can discard useful variation (eq. 47); too much drowns the image centers.</p>
+  </div>
+  <p class="prose">With SACReg, all six methods gain class-center separability, and view sensitivity rises as well. The regularizer improves how image centers are organized along class directions rather than removing augmentation variation. For λ-JEPA, separability improves for 96 of 100 classes.</p>
+</section>
+
+<!-- ============ RESULTS ============ -->
+<section class="stage" id="results">
+  <div class="eyebrow">Results</div>
+  <h2>Close to DINO and iBOT, best transfer at 100 epochs</h2>
+  <figure class="fig">
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Backbone">
+        <button id="rsS" aria-pressed="false">ViT-S/16</button><button id="rsB" aria-pressed="true">ViT-B/16</button>
+      </div>
+      <div class="seg" role="group" aria-label="Metric">
+        <button id="rsLin" aria-pressed="false">ImageNet linear</button><button id="rsTr" aria-pressed="true">Transfer, 8 datasets</button>
+      </div>
+    </div>
+    <div id="rsWrap"></div>
+    <div class="readout" id="rsRead" style="min-height:1.5em"></div>
+    <figcaption>ImageNet-1k pretraining for 100 epochs (Tab. 1a); accuracy in %. Transfer is the mean linear-probe accuracy over eight datasets. Tap a dot.</figcaption>
+  </figure>
+  <p class="prose"><b>Longer training.</b> At 400 epochs with the same hyperparameters, ViT-B reaches 76.0 linear and 82.0 transfer: 2.9 transfer points above 400-epoch VISReg and within 1.2 of DINO and iBOT (Tab. 1b).</p>
+  <p class="prose"><b>Video.</b> Swapped into the LeVJEPA pipeline, the ViT-B reaches 43.9 on Something-Something-v2 at 240 epochs against 30.4 for LeVJEPA, and 48.3 against 40.4 at 1,085 epochs (Tab. 2). These use a probe on the CLS token, the representation SACReg regularizes; mean-pooled features, which it does not touch, do worse (43.4 against 45.7 on Kinetics-400).</p>
+</section>
+
+<!-- ============ LIMITS ============ -->
+<section class="stage" id="limits">
+  <div class="eyebrow">Limitations</div>
+  <h2>Open points</h2>
+  <ul class="lim prose">
+    <li><b>Global views and CLS only.</b> Local crops made the view centers noisy and training unstable, so patch features and dense prediction remain untested (Sec. 5).</li>
+    <li><b>No guarantee beyond the linear case.</b> Δ is not conserved in nonlinear networks; there, the covariance penalty is motivated by the linear analysis and its anti-collapse property is proven for the regularizer alone (Remark A.17).</li>
+    <li><b>Comparisons not fully matched.</b> Long runs reuse the 100-epoch hyperparameters, baselines differ in epochs, and the OK-AI baseline checkpoints were trained on 1.45M images (App. C.5).</li>
+  </ul>
+</section>
+
+<footer>Written October 2026 from arXiv v2 of 2609.35288. Prior work is attributed where it appears; GradCache is Gao et al. (2021), arXiv 2101.06983. Answers marked as my reasoning go beyond the paper. Toy figures are illustrations; numbers are the paper's.</footer>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+function segBind(btns,on){btns.forEach(b=>b.addEventListener('click',()=>{btns.forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));on(b);}));}
+function arrowDefs(s,id){const d=el('defs',{},s);const m=el('marker',{id,viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:6,markerHeight:6,orient:'auto'},d);el('path',{d:'M0 0L10 5L0 10z',class:'mkm'},m);return d;}
+const fmt=(x,n=2)=>(x<0?'−':'')+Math.abs(x).toFixed(n);
+const draws=[];
+let lastW=0;
+window.addEventListener('resize',()=>{const w=document.documentElement.clientWidth;if(w!==lastW){lastW=w;draws.forEach(f=>f());}});
+
+/* ---------- nav highlight ---------- */
+const links=[...document.querySelectorAll('nav.index a')];
+const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+function navUpdate(){let cur=0;secs.forEach((s,i)=>{if(s&&s.getBoundingClientRect().top<120)cur=i;});links.forEach((a,i)=>a.classList.toggle('on',i===cur));}
+window.addEventListener('scroll',navUpdate,{passive:true});navUpdate();
+
+/* ---------- covariance helpers ---------- */
+function cov2(P){const n=P.length;let mx=0,my=0;P.forEach(p=>{mx+=p[0];my+=p[1];});mx/=n;my/=n;let a=0,b=0,c=0;P.forEach(p=>{const dx=p[0]-mx,dy=p[1]-my;a+=dx*dx;b+=dx*dy;c+=dy*dy;});a/=n;b/=n;c/=n;
+  const tr=a+c,det=a*c-b*b,disc=Math.sqrt(Math.max(0,tr*tr/4-det));const l1=tr/2+disc,l2=Math.max(0,tr/2-disc);
+  const ang=Math.abs(b)<1e-12?(a>=c?0:Math.PI/2):Math.atan2(l1-a,b);return{mx,my,l1,l2,ang};}
+
+/* ---------- Motivation: projector toy ---------- */
+(function(){
+  const wrap=$('#mvWrap'),read=$('#mvRead');let nl=true;
+  const N=41,H=[];for(let k=0;k<N;k++){const x=-1+2*k/(N-1);H.push([x,0]);}
+  const proj=h=>nl?[h[0],Math.abs(h[0])]:[0.85*h[0],0.55*h[0]];
+  function panel(s,ox,oy,S,yc,pts,cls,label,sub){
+    const sc=S/2.7;const X=x=>ox+S/2+x*sc,Y=y=>oy+S/2-(y-yc)*sc;
+    el('rect',{x:ox,y:oy,width:S,height:S,rx:8,class:'pl'},s);
+    el('line',{x1:ox+6,x2:ox+S-6,y1:Y(0),y2:Y(0),class:'ax'},s);el('line',{x1:X(0),x2:X(0),y1:oy+6,y2:oy+S-6,class:'ax'},s);
+    const C=cov2(pts);const r1=2*Math.sqrt(C.l1)*sc,r2=2*Math.sqrt(C.l2)*sc;const deg=-C.ang*180/Math.PI;
+    if(r2<0.5){const dx=Math.cos(C.ang)*r1,dy=Math.sin(C.ang)*r1;el('line',{x1:X(C.mx)-dx,y1:Y(C.my)+dy,x2:X(C.mx)+dx,y2:Y(C.my)-dy,class:'ell'},s);}
+    else el('ellipse',{cx:X(C.mx),cy:Y(C.my),rx:r1,ry:r2,transform:`rotate(${deg} ${X(C.mx)} ${Y(C.my)})`,class:'ell'},s);
+    pts.forEach(p=>el('circle',{cx:X(p[0]),cy:Y(p[1]),r:3,class:cls},s));
+    el('text',{x:ox+10,y:oy+18,class:'hd'},s,label);el('text',{x:ox+10,y:oy+S-10},s,sub);
+    return C;
+  }
+  function draw(){
+    const W=wrap.clientWidth;if(!W)return;const nar=W<540;
+    const VW=nar?360:640,VH=nar?560:260;wrap.innerHTML='';
+    const s=el('svg',{viewBox:`0 0 ${VW} ${VH}`,class:'sv',role:'img','aria-label':'Backbone points on a line and their projection'},wrap);arrowDefs(s,'mvA');
+    const Z=H.map(proj);let Ch,Cz;
+    if(!nar){
+      Ch=panel(s,10,10,240,0,H,'pO','h (backbone)','rank '+(cov2(H).l2>1e-9?2:1));
+      el('line',{x1:260,y1:130,x2:283,y2:130,class:'ar','marker-end':'url(#mvA)'},s);
+      el('rect',{x:285,y:106,width:70,height:48,rx:8,class:'bx'},s);el('text',{x:320,y:128,'text-anchor':'middle',class:'t1'},s,'p');el('text',{x:320,y:144,'text-anchor':'middle'},s,nl?'nonlinear':'linear');
+      el('line',{x1:357,y1:130,x2:380,y2:130,class:'ar','marker-end':'url(#mvA)'},s);
+      Cz=panel(s,390,10,240,0.45,Z,'pP','z = p(h)','rank '+(cov2(Z).l2>1e-9?2:1));
+    }else{
+      Ch=panel(s,60,6,240,0,H,'pO','h (backbone)','rank '+(cov2(H).l2>1e-9?2:1));
+      el('line',{x1:180,y1:250,x2:180,y2:262,class:'ar','marker-end':'url(#mvA)'},s);
+      el('rect',{x:130,y:264,width:100,height:30,rx:8,class:'bx'},s);el('text',{x:180,y:284,'text-anchor':'middle',class:'t1'},s,nl?'p, nonlinear':'p, linear');
+      el('line',{x1:180,y1:296,x2:180,y2:308,class:'ar','marker-end':'url(#mvA)'},s);
+      Cz=panel(s,60,312,240,0.45,Z,'pP','z = p(h)','rank '+(cov2(Z).l2>1e-9?2:1));
+    }
+    const e=C=>C.l1.toFixed(2)+' and '+(C.l2<1e-9?'0':C.l2.toFixed(2));
+    read.textContent=nl
+      ?`Cov(h) eigenvalues ${e(Ch)}: rank 1. Cov(z) eigenvalues ${e(Cz)}: rank 2. A rank or covariance penalty on z is satisfied while h uses one direction.`
+      :`Cov(h) eigenvalues ${e(Ch)}, Cov(z) ${e(Cz)}: both rank 1. A linear projector cannot add directions, so a penalty on z would see the collapse.`;
+  }
+  segBind([$('#mvLin'),$('#mvNl')],b=>{nl=b.id==='mvNl';draw();});
+  draws.push(draw);draw();
+  /* RankMe bars */
+  const hz=$('#hzBars');const D=[['VICReg',.39,.27],['VISReg',.06,.77],['LeJEPA',.07,1.00]];
+  hz.innerHTML=D.map(d=>`<div class="r"><span>${d[0]}</span><div class="bars"><div class="b h"><em>h</em><i style="width:calc(${d[1]} * 80%)"></i>${d[1].toFixed(2)}</div><div class="b z"><em>z</em><i style="width:calc(${d[2]} * 80%)"></i>${d[2].toFixed(2)}</div></div></div>`).join('');
+})();
+
+/* ---------- 1: balance bars ---------- */
+(function(){
+  const wrap=$('#blWrap'),read=$('#blRead'),sl=$('#blL'),out=$('#blOut');
+  const S=[3,3,1.5,1.5,0.6,0.6,0,0],YM=4.4;
+  function draw(){
+    const W=wrap.clientWidth;if(!W)return;const nar=W<540;
+    const lam=+sl.value;out.textContent=lam===0?'0':(lam>0?'+':'−')+Math.abs(lam).toFixed(2);
+    const VW=nar?360:640,VH=nar?250:240,x0=nar?30:40,x1=VW-(nar?8:60),yT=14,yB=VH-52;wrap.innerHTML='';
+    const s=el('svg',{viewBox:`0 0 ${VW} ${VH}`,class:'sv',role:'img','aria-label':'Encoder and decoder strength in eight hidden directions'},wrap);
+    const Y=v=>yB-(v/YM)*(yB-yT);
+    [0,1,2,3,4].forEach(v=>{el('line',{x1:x0,x2:x1,y1:Y(v),y2:Y(v),class:v?'gr':'ax'},s);el('text',{x:x0-6,y:Y(v)+3.5,'text-anchor':'end'},s,v);});
+    const gw=(x1-x0)/8,bw=Math.min(16,gw*0.3);let dead=0;
+    S.forEach((sv,i)=>{
+      const r=Math.sqrt(lam*lam+4*sv*sv),a2=Math.max(0,(-lam+r)/2),b2=Math.max(0,(lam+r)/2);
+      const cx=x0+gw*(i+.5);
+      const bar=(v,x,cls)=>{const h=yB-Y(v);if(h>0.4)el('rect',{x,y:Y(v),width:bw,height:h,rx:Math.min(3,h/2),class:cls},s);};
+      bar(a2,cx-bw-1,'bO');bar(b2,cx+1,'bP');
+      if(a2<1e-9){dead++;el('text',{x:cx-bw/2-1,y:yB-6,'text-anchor':'middle',class:'dead'},s,'×');}
+      el('text',{x:cx,y:yB+16,'text-anchor':'middle'},s,'s='+sv);
+      el('text',{x:cx,y:yB+30,'text-anchor':'middle'},s,'#'+(i+1));
+    });
+    if(lam<0){el('line',{x1:x0,x2:x1,y1:Y(-lam),y2:Y(-lam),class:'goal'},s);el('text',{x:nar?x1:x1+6,y:nar?Y(-lam)-5:Y(-lam)+4,'text-anchor':nar?'end':'start',class:'goalt'},s,'|λ|');}
+    el('text',{x:x0,y:VH-6},s,'× = encoder writes nothing: h loses that direction');
+    const L=Math.abs(lam).toFixed(2);
+    read.textContent=lam<0
+      ?`λ = −${L}. Every blue bar is at least |λ| = ${L}, including directions 7–8, which the map does not use and the decoder ignores. h keeps all 8 directions.`
+      :lam===0
+      ?`λ = 0. Blue and rose are equal in every direction. Directions 7–8 are empty in both layers, so h has rank 6.`
+      :`λ = +${L}. The decoder is now the larger layer: it reads at ${L} from directions 7–8, but the encoder writes nothing there. h has rank 6.`;
+  }
+  sl.addEventListener('input',draw);draws.push(draw);draw();
+})();
+
+/* ---------- 2: imbalance dynamics ---------- */
+(function(){
+  const wrap=$('#dyWrap'),read=$('#dyRead'),gS=$('#dyG'),lS=$('#dyL'),play=$('#dyPlay');
+  const D0=[3,2,0.8,0,-1,-3,-5],TM=30,YL=-8.5,YH=3.5;let tShow=TM,raf=null;
+  function draw(){
+    const W=wrap.clientWidth;if(!W)return;const nar=W<540;
+    const g=+gS.value,l=+lS.value,ds=-g/l;$('#dyGo').textContent=g.toFixed(2);$('#dyLo').textContent=l.toFixed(2);
+    const VW=nar?360:640,VH=nar?250:250,x0=34,x1=VW-(nar?10:84),yT=10,yB=VH-34;wrap.innerHTML='';
+    const s=el('svg',{viewBox:`0 0 ${VW} ${VH}`,class:'sv',role:'img','aria-label':'Eigenvalues of the imbalance converging to minus gamma over lambda'},wrap);
+    const X=t=>x0+t/TM*(x1-x0),Y=v=>yT+(YH-v)/(YH-YL)*(yB-yT);
+    [2,0,-2,-4,-6,-8].forEach(v=>{el('line',{x1:x0,x2:x1,y1:Y(v),y2:Y(v),class:v===0?'ax':'gr'},s);el('text',{x:x0-6,y:Y(v)+3.5,'text-anchor':'end'},s,v<0?'−'+(-v):v);});
+    [0,10,20,30].forEach(t=>el('text',{x:X(t),y:yB+15,'text-anchor':'middle'},s,t+'τ'));
+    el('text',{x:x1,y:yB+28,'text-anchor':'end'},s,'training time');
+    const t95=3/(2*l);
+    if(t95<=TM){el('line',{x1:X(t95),x2:X(t95),y1:yT,y2:yB,class:'gr','stroke-dasharray':'2 3'},s);el('text',{x:X(t95)+4,y:yT+10},s,'95% of the way');}
+    el('line',{x1:x0,x2:x1,y1:Y(ds),y2:Y(ds),class:'goal'},s);
+    el('text',{x:nar?x1:x1+6,y:nar?Y(ds)-6:Y(ds)+4,'text-anchor':nar?'end':'start',class:'goalt'},s,'−γ/λreg = '+fmt(ds));
+    D0.forEach(d0=>{let p='';const n=120;for(let k=0;k<=n;k++){const t=tShow*k/n;const v=ds+Math.exp(-2*l*t)*(d0-ds);p+=(k?'L':'M')+X(t).toFixed(1)+' '+Y(v).toFixed(1);}el('path',{d:p,class:'cur'},s);el('circle',{cx:X(0),cy:Y(d0),r:3,class:'dI'},s);});
+    read.textContent=`Target −γ/λreg = ${fmt(ds)}. The gap to it shrinks by a factor e every τ/(2λreg) = ${(1/(2*l)).toFixed(1)}τ, from every starting value and whatever the task.`;
+  }
+  function run(){if(raf)cancelAnimationFrame(raf);if(reduce){tShow=TM;draw();return;}tShow=0;const t0=performance.now();const f=now=>{tShow=Math.min(TM,(now-t0)/2500*TM);draw();if(tShow<TM)raf=requestAnimationFrame(f);else raf=null;};raf=requestAnimationFrame(f);}
+  gS.addEventListener('input',()=>{tShow=TM;draw();});lS.addEventListener('input',()=>{tShow=TM;draw();});play.addEventListener('click',run);
+  draws.push(draw);draw();
+})();
+
+/* ---------- 3: spectral penalty ---------- */
+(function(){
+  const wrap=$('#spWrap'),read=$('#spRead');
+  const N=16,init=Array.from({length:N},(_,i)=>2.6*Math.pow(i+1,-2.4));
+  let sv=init.slice(),step=0,raf=null;const ETA=0.02,MAXS=600;
+  const phi=x=>0.5*(x-Math.log(x));
+  function adv(k){for(let j=0;j<k&&step<MAXS;j++){for(let q=0;q<20;q++)sv=sv.map(x=>Math.max(1e-4,x-ETA/20*0.5*(1-1/x)));step++;}}
+  function draw(){
+    const W=wrap.clientWidth;if(!W)return;const nar=W<540;
+    const VW=nar?360:640,VH=nar?470:240;wrap.innerHTML='';
+    const s=el('svg',{viewBox:`0 0 ${VW} ${VH}`,class:'sv',role:'img','aria-label':'Per-eigenvalue cost curve and sorted spectrum'},wrap);
+    /* left: cost curve */
+    const a={x0:34,x1:nar?VW-12:300,y0:12,y1:nar?200:200};
+    const SX=3,YL=0.3,YH=2.1;const X=x=>a.x0+x/SX*(a.x1-a.x0),Y=y=>a.y1-(y-YL)/(YH-YL)*(a.y1-a.y0);
+    [0.5,1,1.5,2].forEach(v=>{el('line',{x1:a.x0,x2:a.x1,y1:Y(v),y2:Y(v),class:'gr'},s);el('text',{x:a.x0-6,y:Y(v)+3.5,'text-anchor':'end'},s,v);});
+    el('line',{x1:a.x0,x2:a.x1,y1:a.y1,y2:a.y1,class:'ax'},s);
+    [0,1,2,3].forEach(v=>el('text',{x:X(v),y:a.y1+14,'text-anchor':'middle'},s,v));
+    el('text',{x:a.x1,y:a.y1+27,'text-anchor':'end'},s,'eigenvalue s');
+    let p='';for(let k=0;k<=200;k++){const x=0.012+k/200*(SX-0.012);const y=phi(x);if(y>YH)continue;p+=(p?'L':'M')+X(x).toFixed(1)+' '+Y(y).toFixed(1);}
+    el('path',{d:p,class:'crv'},s);
+    el('line',{x1:X(1),x2:X(1),y1:a.y0,y2:a.y1,class:'goal'},s);el('text',{x:X(1)+5,y:a.y0+26,class:'goalt'},s,'γ/λcov = 1');
+    el('text',{x:X(0.06)+4,y:a.y0+10},s,'log det wall');
+    el('text',{x:a.x1,y:Y(phi(2.8))-10,'text-anchor':'end'},s,'trace slope');
+    sv.forEach(x=>el('circle',{cx:X(Math.min(x,SX)),cy:Y(Math.min(phi(x),YH)),r:4,class:'pO'},s));
+    /* right: sorted bars */
+    const b=nar?{x0:34,x1:VW-12,y0:250,y1:436}:{x0:350,x1:VW-12,y0:12,y1:200};
+    const BM=2.8;const BY=v=>b.y1-v/BM*(b.y1-b.y0);
+    [1,2].forEach(v=>{el('line',{x1:b.x0,x2:b.x1,y1:BY(v),y2:BY(v),class:'gr'},s);el('text',{x:b.x0-6,y:BY(v)+3.5,'text-anchor':'end'},s,v);});
+    el('line',{x1:b.x0,x2:b.x1,y1:b.y1,y2:b.y1,class:'ax'},s);el('text',{x:b.x0-6,y:b.y1+3.5,'text-anchor':'end'},s,'0');
+    const srt=sv.slice().sort((u,v)=>v-u);const gw=(b.x1-b.x0)/N,bw=gw-3;
+    srt.forEach((x,i)=>{const h=b.y1-BY(x);el('rect',{x:b.x0+i*gw+1.5,y:BY(x),width:bw,height:Math.max(1,h),rx:Math.min(3,h/2),class:'bO'},s);});
+    el('line',{x1:b.x0,x2:b.x1,y1:BY(1),y2:BY(1),class:'goal'},s);
+    el('text',{x:b.x1,y:b.y1+14,'text-anchor':'end'},s,'16 eigenvalues, largest first');
+    const mn=Math.min(...sv),mx=Math.max(...sv);
+    read.textContent=step>=MAXS
+      ?`t = ${(step*ETA).toFixed(1)}. All eigenvalues near 1, condition number ${(mx/mn).toFixed(2)}: alone, the regularizer ends at the identity covariance (Theorem 3.4).`
+      :`t = ${(step*ETA).toFixed(1)}. Smallest eigenvalue ${mn.toFixed(2)} (cost ${phi(mn).toFixed(2)}), largest ${mx.toFixed(2)} (cost ${phi(mx).toFixed(2)}), condition number ${Math.round(mx/mn)}. The wall lifts small eigenvalues fast; the slope lowers large ones slowly.`;
+  }
+  function stop(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+  $('#spPlay').addEventListener('click',()=>{stop();if(step>=MAXS){sv=init.slice();step=0;}if(reduce){adv(MAXS);draw();return;}const f=()=>{adv(4);draw();if(step<MAXS)raf=requestAnimationFrame(f);else raf=null;};raf=requestAnimationFrame(f);});
+  $('#spStep').addEventListener('click',()=>{stop();adv(10);draw();});
+  $('#spReset').addEventListener('click',()=>{stop();sv=init.slice();step=0;draw();});
+  draws.push(draw);draw();
+})();
+
+/* ---------- 4: lambda-JEPA schematic ---------- */
+(function(){
+  const wrap=$('#ljWrap'),read=$('#ljRead');let on=true,mix=1,raf=null;
+  const CEN_OFF=[[-14,-6],[0,0],[14,6]],CEN_ON=[[-34,-26],[36,-14],[-4,34]];
+  const VIEWS=[[9,-6],[-8,-7],[-6,9],[10,6]];
+  const ZC=[[-30,-22],[32,-10],[-2,32]],ZV=[[4,-3],[-4,-3],[-3,4],[4,3]];
+  function draw(){
+    const W=wrap.clientWidth;if(!W)return;const nar=W<560;
+    const VW=nar?360:640,VH=nar?640:270;wrap.innerHTML='';
+    const s=el('svg',{viewBox:`0 0 ${VW} ${VH}`,class:'sv',role:'img','aria-label':'Views through encoder and projector, with SACReg on view centers'},wrap);arrowDefs(s,'ljA');
+    const L=nar
+      ?{views:[[118,10],[148,10],[178,10],[208,10]],enc:[110,50,140,38],hC:[180,210],hR:78,proj:[110,340,140,38],zC:[180,494],zR:78,
+        a:[[180,36,180,48],[180,90,180,104],[180,288,180,338],[180,380,180,400]],hPill:[70,300,220],zPill:[70,582,220],zPill2:[70,608,220]}
+      :{views:[[14,84],[14,110],[14,136],[14,162]],enc:[64,112,92,46],hC:[250,135],hR:78,proj:[356,112,92,46],zC:[548,135],zR:78,
+        a:[[42,135,62,135],[158,135,170,135],[330,135,354,135],[450,135,468,135]],hPill:[160,226,180],zPill:[463,226,170],zPill2:[463,250,170],hNote:[250,40,'middle']};
+    L.views.forEach((v,k)=>{el('rect',{x:v[0],y:v[1],width:22,height:22,rx:4,style:'fill:var(--soft);stroke:var(--line)'},s);el('text',{x:v[0]+11,y:v[1]+15,'text-anchor':'middle',class:'pt'},s,'v'+(k+1));});
+    if(!nar)el('text',{x:14,y:76},s,'views');
+    L.a.forEach(q=>el('line',{x1:q[0],y1:q[1],x2:q[2],y2:q[3],class:'ar','marker-end':'url(#ljA)'},s));
+    const box=(r,t1,t2)=>{el('rect',{x:r[0],y:r[1],width:r[2],height:r[3],rx:8,class:'bx'},s);el('text',{x:r[0]+r[2]/2,y:r[1]+r[3]/2+(t2?-2:5),'text-anchor':'middle',class:'t1'},s,t1);if(t2)el('text',{x:r[0]+r[2]/2,y:r[1]+r[3]/2+13,'text-anchor':'middle'},s,t2);};
+    box(L.enc,'Encoder','f_θ');box(L.proj,'Projector','p_φ');
+    const space=(c,R,label,cen,views,fill,open)=>{
+      el('circle',{cx:c[0],cy:c[1],r:R,class:'pl'},s);
+      el('text',{x:c[0],y:c[1]-R-6,'text-anchor':'middle',class:'hd'},s,label);
+      cen.forEach((m,i)=>{views.forEach(v=>el('circle',{cx:c[0]+m[0]+v[0],cy:c[1]+m[1]+v[1],r:3.4,class:open},s));el('circle',{cx:c[0]+m[0],cy:c[1]+m[1],r:4.6,class:fill},s);el('text',{x:c[0]+m[0]+(m[0]>=0?9:-9),y:c[1]+m[1]+(m[1]>0?14:-9),'text-anchor':m[0]>=0?'start':'end',style:'fill:var(--ink)'},s,String(i+1));});
+    };
+    const cen=CEN_OFF.map((p,i)=>[p[0]+(CEN_ON[i][0]-p[0])*mix,p[1]+(CEN_ON[i][1]-p[1])*mix]);
+    space(L.hC,L.hR,'h  ·  kept for downstream',cen,VIEWS,'pO','oO');
+    space(L.zC,L.zR,'z',ZC,ZV,'pP','oP');
+    const pill=(p,t,act)=>{el('rect',{x:p[0],y:p[1],width:p[2],height:20,rx:10,class:'pill',opacity:act?1:0.35},s);el('text',{x:p[0]+p[2]/2,y:p[1]+14,'text-anchor':'middle',class:'pt',opacity:act?1:0.5},s,t);};
+    pill(L.hPill,on?'SACReg(H̄) on centers':'no backbone term',on);
+    pill(L.zPill,'L_SSL: views agree',true);
+    pill(L.zPill2,'SACReg(Z̄) on centers',true);
+    read.textContent=on
+      ?'With the backbone term, the image centers in h spread over all directions. It acts on centers only, so the spread of views around each center is left alone.'
+      :'Without it, the image centers in h sit close together along few directions, as Fig. 1 measured for LeJEPA and VISReg, while z still looks spread.';
+  }
+  function go(target){if(raf)cancelAnimationFrame(raf);on=target===1;if(reduce){mix=target;draw();return;}const m0=mix,t0=performance.now();const f=now=>{const k=Math.min(1,(now-t0)/450);mix=m0+(target-m0)*(1-Math.pow(1-k,3));draw();if(k<1)raf=requestAnimationFrame(f);else raf=null;};raf=requestAnimationFrame(f);}
+  segBind([$('#ljOff'),$('#ljOn')],b=>go(b.id==='ljOn'?1:0));
+  draws.push(draw);draw();
+})();
+
+/* ---------- Results dot plot ---------- */
+(function(){
+  const wrap=$('#rsWrap'),read=$('#rsRead');let big=true,tr=true;
+  const DATA={S:[['LeJEPA',62.5,68.7],['DINO',70.0,75.7],['iBOT',70.9,75.9],['λ-JEPA',69.7,77.6]],
+              B:[['LeJEPA',69.7,74.2],['VISReg',70.3,76.4],['DINO',73.9,78.3],['iBOT',77.0,80.7],['λ-JEPA',74.2,80.9]]};
+  const LO=60,HI=82;
+  function draw(){
+    const W=wrap.clientWidth;if(!W)return;const nar=W<540;
+    const rows=DATA[big?'B':'S'],k=tr?2:1,RH=32;
+    const VW=nar?360:640,lx=nar?66:96,x1=VW-(nar?36:56),VH=24+RH*rows.length+14;wrap.innerHTML='';
+    const s=el('svg',{viewBox:`0 0 ${VW} ${VH}`,class:'sv',role:'img','aria-label':'Accuracy per method'},wrap);
+    const X=v=>lx+(v-LO)/(HI-LO)*(x1-lx);
+    [60,65,70,75,80].forEach(v=>{el('line',{x1:X(v),x2:X(v),y1:6,y2:VH-20,class:'gr'},s);el('text',{x:X(v),y:VH-6,'text-anchor':'middle'},s,v);});
+    const best=Math.max(...rows.map(r=>r[k]));
+    rows.forEach((r,i)=>{
+      const y=20+i*RH,me=r[0]==='λ-JEPA';
+      el('text',{x:lx-10,y:y+4,'text-anchor':'end',class:me?'hd':''},s,r[0]);
+      el('line',{x1:lx,x2:X(r[k]),y1:y,y2:y,class:'gr'},s);
+      el('circle',{cx:X(r[k]),cy:y,r:6.5,class:me?'dI':'dM'},s);
+      el('text',{x:X(r[k])+11,y:y+4,class:me?'hd':''},s,r[k].toFixed(1));
+      const h=el('rect',{x:lx-90,y:y-RH/2,width:VW,height:RH,class:'hit'},s);
+      h.addEventListener('click',()=>{read.textContent=`${r[0]}, ViT-${big?'B':'S'}/16, 100 epochs: ${r[1].toFixed(1)} ImageNet linear, ${r[2].toFixed(1)} transfer.`;});
+    });
+    const top=rows.find(r=>r[k]===best);
+    read.textContent=`${tr?'Transfer':'ImageNet linear'}, ViT-${big?'B':'S'}/16: best is ${top[0]} at ${best.toFixed(1)}.`+(tr?'':(top[0]==='λ-JEPA'?'':` λ-JEPA: ${rows.find(r=>r[0]==='λ-JEPA')[1].toFixed(1)}.`));
+  }
+  segBind([$('#rsS'),$('#rsB')],b=>{big=b.id==='rsB';draw();});
+  segBind([$('#rsLin'),$('#rsTr')],b=>{tr=b.id==='rsTr';draw();});
+  draws.push(draw);draw();
+})();
+
+lastW=document.documentElement.clientWidth;
+})();
+</script>
+
+</body></html>

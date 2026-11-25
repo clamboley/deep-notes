@@ -32,9 +32,10 @@ for (const paper of papers.sort((a, b) => b.paperDate.localeCompare(a.paperDate)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(paper.paperDate) || Number.isNaN(Date.parse(`${paper.paperDate}T00:00:00Z`))) throw new Error(`Invalid paper date: ${paper.paperDate}`)
   const date = new Intl.DateTimeFormat("en", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(`${paper.paperDate}T00:00:00Z`))
   const cover = await localAsset(paper.cover)
-  if (paper.note !== `papers/${paper.slug}/index.html`) throw new Error(`Expected note at papers/${paper.slug}/index.html`)
-  const note = await localAsset(paper.note)
-  notePages.push(paper.note)
+  if (paper.note && paper.note !== `papers/${paper.slug}/index.html`) throw new Error(`Expected note at papers/${paper.slug}/index.html`)
+  if (!paper.note && !paper.video) throw new Error(`Paper needs a note or a video: ${paper.slug}`)
+  const note = paper.note ? await localAsset(paper.note) : null
+  if (note) notePages.push(paper.note)
   const video = paper.video ? await localAsset(paper.video) : null
   const videoPage = video ? `papers/${paper.slug}/video.html` : null
   if (video) videoPages.push({ slug: paper.slug, title: escapeHtml(paper.title), cover, note, video })
@@ -42,7 +43,7 @@ for (const paper of papers.sort((a, b) => b.paperDate.localeCompare(a.paperDate)
   const searchable = [paper.title, paper.description, ...labels, paper.paperDate].join(" ").toLocaleLowerCase()
 
   cards.push(`<article class="paper-card" data-search="${escapeHtml(searchable)}" data-year="${paper.paperDate.slice(0, 4)}" data-labels="${escapeHtml(labels.map(labelKey).join(" "))}">
-  <a class="card-main" href="${note}" aria-label="Read ${escapeHtml(paper.title)} notes">
+  <a class="card-main" href="${note || videoPage}" aria-label="${note ? "Read" : "Watch"} ${escapeHtml(paper.title)} ${note ? "notes" : "video"}">
     <span class="card-cover"><img src="${cover}" alt="${escapeHtml(paper.coverAlt || "")}" loading="lazy"></span>
     <span class="card-title">${escapeHtml(paper.title)}</span>
   </a>
@@ -76,11 +77,12 @@ await writeFile(join(output, "index.html"), template
   .replace("{{LABEL_OPTIONS}}", labelOptions)
   .replace("{{PAPER_CARDS}}", cards.join("\n")))
 for (const page of videoPages) {
+  await mkdir(join(output, "papers", page.slug), { recursive: true })
   await writeFile(join(output, "papers", page.slug, "video.html"), videoTemplate
     .replace("{{SITE_HEADER}}", headerFor("../../"))
     .replaceAll("{{TITLE}}", page.title)
     .replaceAll("{{COVER}}", page.cover)
     .replaceAll("{{VIDEO}}", page.video)
-    .replaceAll("{{NOTE}}", page.note))
+    .replace("{{NOTE_LINK}}", page.note ? `<a class="note-link" href="../../${page.note}">Read the note</a>` : ""))
 }
 console.log(`Built ${cards.length} paper${cards.length === 1 ? "" : "s"} in ${output}`)

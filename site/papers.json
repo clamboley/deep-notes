@@ -42,5 +42,15 @@
     "coverAlt": "A backbone representation collapsed onto a line is projected by a nonlinear head into a cloud that looks full rank; a log-determinant regularizer on the backbone pulls it open.",
     "note": "papers/lambda-jepa/index.html",
     "video": "videos/lambda-jepa.mp4"
+  },
+  {
+    "slug": "dinov3",
+    "title": "DINOv3",
+    "paperDate": "2025-08-13",
+    "description": "Self-distillation scaled to a 7B ViT, with Gram anchoring to keep dense patch features from degrading over long training.",
+    "labels": ["Self-supervised learning", "Vision", "Representation learning"],
+    "cover": "assets/dinov3-cover.svg",
+    "coverAlt": "Image patches feed a 7B ViT; the patch-to-patch similarity matrix of its features is anchored to that of an earlier checkpoint.",
+    "video": "videos/dinov3.mp4"
   }
 ]

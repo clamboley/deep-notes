@@ -8,7 +8,7 @@ The site is plain HTML, CSS, and JavaScript. GitHub Pages publishes the generate
 
 1. Put the standalone HTML note in `site/papers/<slug>/index.html`.
 2. Put its cover image in `site/assets/`. If there is a companion video, put it in `site/videos/`.
-3. Add an entry to `site/papers.json`. Use the **paper's original publication date** in `paperDate` (`YYYY-MM-DD`), not the date the note was written. Put the paper's filter categories in `labels` and omit `video` when there isn't one.
+3. Add an entry to `site/papers.json`. Use the **paper's original publication date** in `paperDate` (`YYYY-MM-DD`), not the date the note was written. Put the paper's filter categories in `labels` and omit `video` when there isn't one. A paper can also be video-only: omit `note` and the card links straight to the video page.
 4. Run `node scripts/build.mjs` and open `public/index.html` to check the result.
 
 The build sorts cards by paper publication date, newest first, and checks that every referenced local file exists. It adds the shared site header to the published copy of each standalone note; the source HTML stays untouched. When a paper has a video, the build creates a small video page with a link back to the library. The year and label filters are generated from `papers.json`; search covers title, description, labels, and paper date.

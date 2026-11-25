@@ -47,10 +47,10 @@
     "slug": "dinov3",
     "title": "DINOv3",
     "paperDate": "2025-08-13",
-    "description": "Self-distillation scaled to a 7B ViT, with Gram anchoring to keep dense patch features from degrading over long training.",
+    "description": "DINOv3 rebuilt step by step: DINO self-distillation, iBOT masked patches, KoLeo, registers and Gram anchoring, and why each one is needed.",
     "labels": ["Self-supervised learning", "Vision", "Representation learning"],
     "cover": "assets/dinov3-cover.svg",
-    "coverAlt": "Image patches feed a 7B ViT; the patch-to-patch similarity matrix of its features is anchored to that of an earlier checkpoint.",
+    "coverAlt": "A staircase from DINO to DINOv3 where each step keeps the previous techniques and adds one: self-distillation, masked patch prediction, KoLeo, registers, Gram anchoring.",
     "video": "videos/dinov3.mp4"
   }
 ]
